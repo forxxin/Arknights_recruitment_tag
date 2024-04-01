@@ -114,7 +114,7 @@ class Character():
                 raritys.append(rarity)
             raritys.sort()
             return int(raritys[0][-1:])
-            
+
     @staticmethod
     def rarity(tag,tier_str='345') -> list:
         return Character.search_rarity(Character.search(tag,tier_str))
@@ -142,12 +142,91 @@ class Character():
         return _taglist_byrarity
 
     @staticmethod
-    def hr_tag(tier_str='345',taglist_=None,maxtag=6):
-        if taglist_==None:
-            taglist_=Character.all_tagList[:]
+    def comb(tier_str='345',taglist=None,maxtag=6):
+        if taglist==None:
+            taglist=Character.all_tagList[:]
+        tagset_list=list(subset(taglist,maxtag=maxtag,self=1))
+        tagset_list_norepeat=[]
+        for tagset in tagset_list:
+            ok=True
+            if Character.rarity(tagset, tier_str):
+                for subtagset in subset(tagset,maxtag=maxtag,self=0):
+                    if Character.rarity(subtagset, tier_str) and Character.rarity(tagset, tier_str)<=Character.rarity(subtagset, tier_str):
+                        ok=False
+                        break
+            else:
+                ok=False
+            if ok:
+                tagset_list_norepeat.append(tagset)
+        return tagset_list_norepeat
+
+    @staticmethod
+    def comb_dict(tier_str='345',taglist=None,maxtag=6):
+        tagset_list = Character.comb(tier_str,taglist,maxtag)
+        tagset_dict={}
+        added=[]
+        for tag in Character.taglist_byrarity():
+            for tagset in tagset_list:
+                if tag in tagset and tagset not in added:
+                    taglist=list(tagset)
+                    taglist.remove(tag)
+                    tagset_dict.setdefault(tag,[]).append(taglist)
+                    added.append(tagset)
+        return tagset_dict
+
+    @staticmethod
+    @cache
+    def min_tier(tier_str):
+        return min([int(i) for i in tier_str])
+
+    @staticmethod
+    def tagset_format(tier_str='345',taglist=None,maxtag=6):
         txt_data=[]
         def txt_insert(value,style=''):
             txt_data.append((value,style))
+        def generate_txt_data(tagset_dict,tier_str):
+            for tag,part_tags in tagset_dict.items():
+                show=False
+                show1=False
+                rarity = Character.rarity(frozenset([tag]), tier_str)
+                if '345'!=tier_str:
+                    if rarity and Character.min_tier(tier_str)<=rarity:
+                        show=True
+                else:
+                    if rarity and Character.min_tier(tier_str)<rarity:
+                        show=True
+                for part_tag in part_tags:
+                    if part_tag:
+                        if '345'!=tier_str:
+                            rarity1=Character.rarity(frozenset([tag]+part_tag), tier_str)
+                            rarity1_=Character.rarity(frozenset([tag]+part_tag), tier_str='345')
+                            if (not rarity1_) or (rarity1_ and rarity1_<rarity1):
+                                show1=True
+                                break
+                        else:
+                            show1=True
+                            break
+                if '345'!=tier_str:
+                    rarity_=Character.rarity(frozenset([tag]), tier_str='345')
+                    if rarity_ and rarity_>=rarity:
+                        show=False
+                if show or show1:
+                    txt_insert(tag, rarity)
+                    txt_insert(' '*(max(15-len(tag),1)))
+                    if show1:
+                        txt_insert('+ ')
+                    for part_tag in part_tags:
+                        if part_tag:
+                            rarity1=Character.rarity(frozenset([tag]+part_tag), tier_str)
+                            show2=True
+                            if '345'!=tier_str:
+                                rarity1_=Character.rarity(frozenset([tag]+part_tag), tier_str='345')
+                                if rarity1_ and rarity1_>=rarity1:
+                                    show2=False
+                            if show2:
+                                txt_insert('+'.join(part_tag), rarity1)
+                                txt_insert(' ')
+                    txt_insert('\n')
         txt_insert("\n")
         for i in tier_str:
             txt_insert(f"t{i}", f'{i}')
@@ -160,80 +239,10 @@ class Character():
         txt_insert("\n")
         if tier_str in ['5','6']:
             return txt_data
-        min_tier=min([int(i) for i in tier_str])
-        tagset_list=list(subset(taglist_,maxtag=maxtag,self=1))
-        tagset_rarity={}
-        rarity_tagset={}
-        for tagset in tagset_list:
-            rarity=Character.rarity(tagset, tier_str=tier_str)
-            tagset_rarity[tagset]=rarity
-            rarity_tagset.setdefault(rarity,[]).append(tagset)
-        tagset_list_norepeat=[]
-        for tagset in tagset_list:
-            ok=True
-            if tagset_rarity[tagset]:
-                for subtagset in subset(tagset,maxtag=maxtag,self=0):
-                    if tagset_rarity[subtagset] and tagset_rarity[tagset]<=tagset_rarity[subtagset]:
-                        ok=False
-                        break
-            else:
-                ok=False
-            if ok:
-                tagset_list_norepeat.append(tagset)
-        result={}
-        added=[]
-        for tag in Character.taglist_byrarity():
-            for tagset in tagset_list_norepeat:
-                if tag in tagset and tagset not in added:
-                    taglist=list(tagset)
-                    taglist.remove(tag)
-                    result.setdefault(tag,[]).append(taglist)
-                    added.append(tagset)
-
-        for tag,taglists in result.items():
-            show=False
-            show1=False
-            rarity = tagset_rarity[frozenset([tag])]
-            if '345'!=tier_str:
-                if rarity and min_tier<=rarity:
-                    show=True
-            else:
-                if rarity and min_tier<rarity:
-                    show=True
-            for taglist in taglists:
-                if taglist:
-                    if '345'!=tier_str:
-                        rarity1=tagset_rarity[frozenset([tag]+taglist)]
-                        rarity1_=Character.rarity(frozenset([tag]+taglist), tier_str='345')
-                        if (not rarity1_) or (rarity1_ and rarity1_<rarity1):
-                            show1=True
-                            break
-                    else:
-                        show1=True
-                        break
-            if '345'!=tier_str:
-                rarity_=Character.rarity(frozenset([tag]), tier_str='345')
-                if rarity_ and rarity_>=rarity:
-                    show=False
-            if show or show1:
-                txt_insert(tag, rarity)
-                txt_insert(' '*(max(15-len(tag),1)))
-                if show1:
-                    txt_insert('+ ')
-                for taglist in taglists:
-                    if taglist:
-                        rarity1=tagset_rarity[frozenset([tag]+taglist)]
-                        show2=True
-                        if '345'!=tier_str:
-                            rarity1_=Character.rarity(frozenset([tag]+taglist), tier_str='345')
-                            if rarity1_ and rarity1_>=rarity1:
-                                show2=False
-                        if show2:
-                            txt_insert('+'.join(taglist), rarity1)
-                            txt_insert(' ')
-                txt_insert('\n')
+        tagset_dict = Character.comb_dict(tier_str,taglist,maxtag)
+        generate_txt_data(tagset_dict,tier_str)
         return txt_data
-    
+
     @staticmethod
     def hr_all():
         result_file="ArknightsRecruitmentTag.tmp"
@@ -257,11 +266,11 @@ class Character():
             txt_insert("t2", '2')
             txt_insert("t1", '1')
             txt_insert("\n")
-            txt_data+=Character.hr_tag(tier_str='6')
-            txt_data+=Character.hr_tag(tier_str='5')
-            txt_data+=Character.hr_tag(tier_str='345')
-            txt_data+=Character.hr_tag(tier_str='2345')
-            txt_data+=Character.hr_tag(tier_str='1234')
+            txt_data+=Character.tagset_format(tier_str='6')
+            txt_data+=Character.tagset_format(tier_str='5')
+            txt_data+=Character.tagset_format(tier_str='345')
+            txt_data+=Character.tagset_format(tier_str='2345')
+            txt_data+=Character.tagset_format(tier_str='1234')
             save_result(txt_data)
         return txt_data
 
@@ -339,9 +348,9 @@ def ui_hr_tag(tags=[]):
     
     def ok(tags):
         txt_data=[]
-        txt_data+=Character.hr_tag(tier_str='345',taglist_=tags,maxtag=len(tags))
-        txt_data+=Character.hr_tag(tier_str='2345',taglist_=tags,maxtag=len(tags))
-        txt_data+=Character.hr_tag(tier_str='1234',taglist_=tags,maxtag=len(tags))
+        txt_data+=Character.tagset_format(tier_str='345',taglist=tags,maxtag=len(tags))
+        txt_data+=Character.tagset_format(tier_str='2345',taglist=tags,maxtag=len(tags))
+        txt_data+=Character.tagset_format(tier_str='1234',taglist=tags,maxtag=len(tags))
         txtm.configure(state='normal')
         txtm.delete("1.0",tk.END)
         txtm.insert('end', f"{tags}")
