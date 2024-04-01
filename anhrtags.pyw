@@ -27,10 +27,15 @@ class Character():
     @staticmethod
     @cache
     def _character_table() -> dict:
-        url_character_table = 'https://github.com/Aceship/AN-EN-Tags/raw/master/json/gamedata/en_US/gamedata/excel/character_table.json'
-        file_character_table = 'character_table.json'
+        # lang='ja_JP'
+        # lang='ko_KR'
+        # lang='zh_TW'
+        # lang='zh_CN'
+        lang='en_US'
+        url_character_table = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/gamedata/{lang}/gamedata/excel/character_table.json'
+        file_character_table = f'character_table_{lang}.json'
         if not os.path.isfile(file_character_table):
-            urllib.request.urlretrieve(url_character_table, "character_table.json")
+            urllib.request.urlretrieve(url_character_table, file_character_table)
         with open(file_character_table, "r", encoding="utf-8") as f:
             return json.load(f)
 
@@ -45,11 +50,19 @@ class Character():
         return keys
 
     @staticmethod
+    def recruitable(char_id):
+        # Character._tl_akhr().get(char_id,{}).get('globalHidden')!=True
+        # 'Recruitment' in (char_data.get('itemObtainApproach','') or '')
+        # char_data.get('isNotObtainable','')==False
+        if Character._tl_akhr().get(char_id) and Character._tl_akhr().get(char_id,{}).get('globalHidden')!=True:
+            return True
+
+    @staticmethod
     @cache
     def get_all(key) -> list:
         tags = []
         for char_id,char_data in Character._character_table().items():
-            if 'Recruitment' in (char_data.get('itemObtainApproach','') or '') and char_data.get('isNotObtainable','')==False:
+            if Character.recruitable(char_id):
                 if key in Character.key_type(str):
                     tag = char_data.get(key,'')
                     if key=='profession':
@@ -82,7 +95,7 @@ class Character():
 
         character_tag={}
         for char_id,char_data in Character._character_table().items():
-            if Character._tl_akhr().get(char_id,{}).get('globalHidden')!=True and char_data.get('rarity','None') in tier:
+            if Character.recruitable(char_id) and char_data.get('rarity','None') in tier:
                 tags=set(char_data.get('tagList',[])or[])
                 profession=char_data.get('profession')
                 tags.add(Character.profession_name.get(profession,profession))
