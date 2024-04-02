@@ -5,20 +5,19 @@ from functools import cache
 import urllib.request
 import tkinter as tk
 from itertools import combinations
+#1 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
+#2 pip install --upgrade pywin32 pytesseract opencv-python
+#3 set pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
 try:
     import cv2 as cv
     import pytesseract
     import win32gui
     import win32ui
+    pytesseract.pytesseract.tesseract_cmd = r'../../Tesseract-OCR/tesseract.exe'
 except:
     pass
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
-
-#1 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
-#2 pip install --upgrade pywin32 pytesseract opencv-python
-#3 set pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
-pytesseract.pytesseract.tesseract_cmd = r'../../Tesseract-OCR/tesseract.exe'
 
 def subset(taglist,maxtag=6,self=0):
     for i in range(1,min(maxtag+1,len(taglist)+self)):
