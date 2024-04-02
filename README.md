@@ -6,5 +6,5 @@ Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
 
 pip install pywin32 pytesseract opencv-python
 
-edit code   pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
+edit code:   ```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
 
