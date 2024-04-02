@@ -327,7 +327,7 @@ def app_image(img,app_title='Arknights',border=False,scaled=True):
     if result == 1:
         im.save(img)
 
-def resize(image, width=None, height=None, inter=cv.INTER_AREA):
+def resize(image, width=None, height=None):
     dim = None
     (h, w) = image.shape[:2]
     if width is None and height is None:
@@ -338,7 +338,7 @@ def resize(image, width=None, height=None, inter=cv.INTER_AREA):
     else:
         r = width / float(w)
         dim = (width, int(h * r))
-    return cv.resize(image, dim, interpolation=inter)
+    return cv.resize(image, dim, interpolation=cv.INTER_AREA)
     
 def ocr_tag(setup=False):
     return list(_ocr_tag(setup=setup))
