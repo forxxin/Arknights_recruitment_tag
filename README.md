@@ -2,9 +2,9 @@
 
 Python 3.12.2
 
-Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
+Install tesseract [](https://github.com/UB-Mannheim/tesseract/wiki)
 
-pip install pywin32 pytesseract opencv-python
+```pip install pywin32 pytesseract opencv-python```
 
 edit code:   ```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
 
