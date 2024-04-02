@@ -14,10 +14,10 @@ def subset(taglist,maxtag=6,self=0):
             yield frozenset(s)
 
 class Character():
-    version=5
+    version=8
     @staticmethod
     @cache
-    def _tl_akhr() -> dict:
+    def _tl_akhr():
         url_tl_akhr = 'https://github.com/Aceship/AN-EN-Tags/raw/master/json/tl-akhr.json'
         file_tl_akhr = 'tl-akhr.json'
         if not os.path.isfile(file_tl_akhr):
@@ -27,7 +27,7 @@ class Character():
 
     @staticmethod
     @cache
-    def _character_table() -> dict:
+    def _character_table():
         # lang='ja_JP'
         # lang='ko_KR'
         # lang='zh_TW'
@@ -41,7 +41,7 @@ class Character():
             return json.load(f)
 
     @staticmethod
-    def key_type(typa) -> list:
+    def key_type(typa):
         keys=[]
         for char_id,char_data in Character._character_table().items():
             for key in ['name', 'description', 'canUseGeneralPotentialItem', 'canUseActivityPotentialItem', 'potentialItemId', 'activityPotentialItemId', 'classicPotentialItemId', 'nationId', 'groupId', 'teamId', 'displayNumber', 'appellation', 'position', 'tagList', 'itemUsage', 'itemDesc', 'itemObtainApproach', 'isNotObtainable', 'isSpChar', 'maxPotentialLevel', 'rarity', 'profession', 'subProfessionId', 'trait', 'phases', 'skills', 'displayTokenDict', 'talents', 'potentialRanks', 'favorKeyFrames', 'allSkillLvlup']:
@@ -60,7 +60,7 @@ class Character():
 
     @staticmethod
     @cache
-    def get_all(key) -> list:
+    def get_all(key):
         values = []
         for char_id,char_data in Character._character_table().items():
             if Character.recruitable(char_id):
@@ -88,7 +88,7 @@ class Character():
     }
     @staticmethod
     @cache
-    def _recruit_tag(tier_str='345') -> dict:        
+    def _recruit_tag(tier_str='345'):        
         # 1234 2345 345 5 6
         tier=[]
         for i in tier_str:
@@ -105,14 +105,14 @@ class Character():
         return character_tag
         
     @staticmethod
-    def search(tag,tier_str='345') -> list:
+    def search(tag,tier_str='345'):
         if isinstance(tag,str):
             tag=[tag]
         return Character.search_(frozenset(tag),tier_str)
 
     @staticmethod
     @cache
-    def search_(tag,tier_str='345') -> list:
+    def search_(tag,tier_str='345'):
         def _search():
             for name,_tag in Character._recruit_tag(tier_str).items():
                 if set(tag).issubset(_tag):
@@ -120,7 +120,7 @@ class Character():
         return list(_search())
         
     @staticmethod
-    def search_rarity(char_ids) -> list:
+    def search_rarity(char_ids):
         if char_ids:
             raritys=[]
             for char_id in char_ids:
@@ -130,11 +130,11 @@ class Character():
             return int(raritys[0][-1:])
 
     @staticmethod
-    def _rarity(tag,tier_str='345') -> list:
+    def _rarity(tag,tier_str='345'):
         return Character.search_rarity(Character.search(tag,tier_str))
         
     @staticmethod
-    def rarity(tag) -> list:
+    def rarity(tag) -> int:
         rarity = Character._rarity(tag, '345')
         if rarity:
             return rarity
@@ -209,16 +209,17 @@ class Character():
                     if part_tag:
                         show=True
                         break
-                txt_insert(tag, rarity)
-                txt_insert(' '*(max(15-len(tag),1)))
+                if not (rarity==3 and not show and taglist==None):
+                    txt_insert(tag, rarity)
                 if show:
-                    txt_insert('+ ')
+                    txt_insert(' '*(max(15-len(tag),1))+'+ ')
                     for part_tag in part_tags:
                         if part_tag:
                             rarity1=Character.rarity([tag]+part_tag)
                             txt_insert('+'.join(part_tag), rarity1)
                             txt_insert(' ')
-                txt_insert('\n')
+                if not (rarity==3 and not show and taglist==None):
+                    txt_insert('\n')
         
         tagset_dict = Character.comb_dict(taglist,maxtag)
         generate_txt_data(tagset_dict)
