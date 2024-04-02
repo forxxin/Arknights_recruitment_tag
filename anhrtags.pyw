@@ -14,6 +14,7 @@ def subset(taglist,maxtag=6,self=0):
             yield frozenset(s)
 
 class Character():
+    version=5
     @staticmethod
     @cache
     def _tl_akhr() -> dict:
@@ -60,20 +61,20 @@ class Character():
     @staticmethod
     @cache
     def get_all(key) -> list:
-        tags = []
+        values = []
         for char_id,char_data in Character._character_table().items():
             if Character.recruitable(char_id):
-                if key in Character.key_type(str):
-                    tag = char_data.get(key,'')
+                if key in Character.key_type(list):
+                    for value in char_data.get(key,[]) or []:
+                        if value not in values:
+                            values.append(value)
+                else:
+                    value = char_data.get(key,'')
                     if key=='profession':
-                        tag=Character.profession_name.get(tag,tag)
-                    if tag not in tags:
-                        tags.append(tag)
-                elif key in Character.key_type(list):
-                    for tag in char_data.get(key,[]) or []:
-                        if tag not in tags:
-                            tags.append(tag)
-        return tags
+                        value=Character.profession_name.get(value,value)
+                    if value not in values:
+                        values.append(value)
+        return values
 
     profession_name = {  
         "WARRIOR": "Guard",
@@ -129,42 +130,37 @@ class Character():
             return int(raritys[0][-1:])
 
     @staticmethod
-    def rarity(tag,tier_str='345') -> list:
+    def _rarity(tag,tier_str='345') -> list:
         return Character.search_rarity(Character.search(tag,tier_str))
+        
+    @staticmethod
+    def rarity(tag) -> list:
+        rarity = Character._rarity(tag, '345')
+        if rarity:
+            return rarity
+        rarity = Character._rarity(tag, '2345')
+        if rarity:
+            return rarity
+        rarity = Character._rarity(tag, '1234')
+        return rarity
 
     @staticmethod
     @cache
-    def taglist_byrarity():
-        _taglist_byrarity=[]
-        rarity_single_tag={}
-        for tag in Character.tagList+Character.profession+Character.position:
-            rarity = Character.rarity(frozenset([tag]), '345')
-            if rarity:
-                rarity_single_tag.setdefault(rarity,[]).append(tag)
-                continue
-            rarity = Character.rarity(frozenset([tag]), '2345')
-            if rarity:
-                rarity_single_tag.setdefault(rarity,[]).append(tag)
-                continue
-            rarity = Character.rarity(frozenset([tag]), '1234')
-            if rarity:
-                rarity_single_tag.setdefault(rarity,[]).append(tag)
-                continue
-        for i in range(5,0,-1):
-            _taglist_byrarity+=rarity_single_tag.get(i,[]) 
-        return _taglist_byrarity
+    def tag_byrarity():
+        x = {tag:Character.rarity(tag) for tag in Character.tagList+Character.profession+Character.position}
+        return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
 
     @staticmethod
-    def comb(tier_str='345',taglist=None,maxtag=6):
+    def comb(taglist=None,maxtag=6):
         if taglist==None:
             taglist=Character.all_tagList[:]
         tagset_list=list(subset(taglist,maxtag=maxtag,self=1))
         tagset_list_norepeat=[]
         for tagset in tagset_list:
             ok=True
-            if Character.rarity(tagset, tier_str):
+            if Character.rarity(tagset):
                 for subtagset in subset(tagset,maxtag=maxtag,self=0):
-                    if Character.rarity(subtagset, tier_str) and Character.rarity(tagset, tier_str)<=Character.rarity(subtagset, tier_str):
+                    if Character.rarity(subtagset) and Character.rarity(tagset)<=Character.rarity(subtagset):
                         ok=False
                         break
             else:
@@ -174,11 +170,11 @@ class Character():
         return tagset_list_norepeat
 
     @staticmethod
-    def comb_dict(tier_str='345',taglist=None,maxtag=6):
-        tagset_list = Character.comb(tier_str,taglist,maxtag)
+    def comb_dict(taglist=None,maxtag=6):
+        tagset_list = Character.comb(taglist,maxtag)
         tagset_dict={}
         added=[]
-        for tag in Character.taglist_byrarity():
+        for tag in Character.tag_byrarity():
             for tagset in tagset_list:
                 if tag in tagset and tagset not in added:
                     taglist=list(tagset)
@@ -193,67 +189,39 @@ class Character():
         return min([int(i) for i in tier_str])
 
     @staticmethod
-    def tagset_format(tier_str='345',taglist=None,maxtag=6):
+    def tagset_format(taglist=None,maxtag=6):
+        if taglist==None:
+            return Character._tagset_format(taglist,maxtag)
+        else:
+            return Character._tagset_format(frozenset(taglist),maxtag)
+
+    @staticmethod
+    @cache
+    def _tagset_format(taglist=None,maxtag=6):
         txt_data=[]
         def txt_insert(value,style=''):
             txt_data.append((value,style))
-        def generate_txt_data(tagset_dict,tier_str):
+        def generate_txt_data(tagset_dict):
             for tag,part_tags in tagset_dict.items():
                 show=False
-                show1=False
-                rarity = Character.rarity(frozenset([tag]), tier_str)
-                if '345'!=tier_str:
-                    if rarity and Character.min_tier(tier_str)<=rarity:
-                        show=True
-                else:
-                    if rarity and Character.min_tier(tier_str)<rarity:
-                        show=True
+                rarity = Character.rarity(tag)
                 for part_tag in part_tags:
                     if part_tag:
-                        if '345'!=tier_str:
-                            rarity1=Character.rarity(frozenset([tag]+part_tag), tier_str)
-                            rarity1_=Character.rarity(frozenset([tag]+part_tag), tier_str='345')
-                            if (not rarity1_) or (rarity1_ and rarity1_<rarity1):
-                                show1=True
-                                break
-                        else:
-                            show1=True
-                            break
-                if '345'!=tier_str:
-                    rarity_=Character.rarity(frozenset([tag]), tier_str='345')
-                    if rarity_ and rarity_>=rarity:
-                        show=False
-                if show or show1:
-                    txt_insert(tag, rarity)
-                    txt_insert(' '*(max(15-len(tag),1)))
-                    if show1:
-                        txt_insert('+ ')
+                        show=True
+                        break
+                txt_insert(tag, rarity)
+                txt_insert(' '*(max(15-len(tag),1)))
+                if show:
+                    txt_insert('+ ')
                     for part_tag in part_tags:
                         if part_tag:
-                            rarity1=Character.rarity(frozenset([tag]+part_tag), tier_str)
-                            show2=True
-                            if '345'!=tier_str:
-                                rarity1_=Character.rarity(frozenset([tag]+part_tag), tier_str='345')
-                                if rarity1_ and rarity1_>=rarity1:
-                                    show2=False
-                            if show2:
-                                txt_insert('+'.join(part_tag), rarity1)
-                                txt_insert(' ')
-                    txt_insert('\n')
-        txt_insert("\n")
-        for i in tier_str:
-            txt_insert(f"t{i}", f'{i}')
-        if tier_str=='5':
-            txt_insert(" 9h ")
-            txt_insert("Senior Operator", '5')
-        if tier_str=='6':
-            txt_insert(" 9h ")
-            txt_insert("Top Operator", '6')
-        txt_insert("\n")
-        if tier_str in ['5','6']:
-            return txt_data
-        tagset_dict = Character.comb_dict(tier_str,taglist,maxtag)
-        generate_txt_data(tagset_dict,tier_str)
+                            rarity1=Character.rarity([tag]+part_tag)
+                            txt_insert('+'.join(part_tag), rarity1)
+                            txt_insert(' ')
+                txt_insert('\n')
+        
+        tagset_dict = Character.comb_dict(taglist,maxtag)
+        generate_txt_data(tagset_dict)
         return txt_data
 
     @staticmethod
@@ -261,29 +229,27 @@ class Character():
         result_file="ArknightsRecruitmentTag.tmp"
         def save_result(obj):
             with open(result_file, "wb") as pickle_file:
-                pickle.dump(obj, pickle_file, pickle.HIGHEST_PROTOCOL)
+                pickle.dump([Character.version,obj], pickle_file, pickle.HIGHEST_PROTOCOL)
         def load_result():
             try:
                 with open(result_file, "rb") as pickle_file:
-                    return pickle.load(pickle_file)
-            except:
-                return []
+                    version,obj = pickle.load(pickle_file)
+                    if version==Character.version:
+                        return obj
+            except: pass
+            return []
         txt_data=load_result()
         if not txt_data:
             def txt_insert(value,style=''):
                 txt_data.append((value,style))
-            txt_insert("t6", '6')
-            txt_insert("t5", '5')
-            txt_insert("t4", '4')
-            txt_insert("t3", '3')
-            txt_insert("t2", '2')
-            txt_insert("t1", '1')
+            for i in range(6,0,-1):
+                txt_insert(f"t{i}", i)
             txt_insert("\n")
-            txt_data+=Character.tagset_format(tier_str='6')
-            txt_data+=Character.tagset_format(tier_str='5')
-            txt_data+=Character.tagset_format(tier_str='345')
-            txt_data+=Character.tagset_format(tier_str='2345')
-            txt_data+=Character.tagset_format(tier_str='1234')
+            txt_insert("Top Operator", 6)
+            txt_insert("\n")
+            txt_insert("Senior Operator", 5)
+            txt_insert("\n")
+            txt_data+=Character.tagset_format()
             save_result(txt_data)
         return txt_data
 
@@ -293,34 +259,51 @@ Character.tagList=sorted(Character.get_all('tagList'))
 Character.all_tagList=sorted(Character.tagList+Character.profession+Character.position)
 
 def ui_hr_tag(tags=[]):
+    class Checkbar(tk.Frame):
+        def __init__(self, parent=None, picks=[]):
+            super().__init__(parent)
+            self.checks_value = []
+            self.checks={}
+            for r,checklist in enumerate(picks):
+                for c,tag in enumerate(checklist):
+                    value = tk.StringVar(value="")
+                    chk = tk.Checkbutton(self, text=tag, variable=value, onvalue=tag, offvalue="", indicatoron=False,foreground=colors.get(Character.rarity(tag),'black'))
+                    chk.grid(row=r, column=c)
+                    self.checks[tag]=chk
+                    self.checks_value.append(value)
+            btnk = tk.Button(self,text="Ok",command=self.ok)
+            btnc = tk.Button(self,text="Clear",command=lambda:self.select([]))
+            btnk.grid(row=len(picks), column=0)
+            btnc.grid(row=len(picks), column=1)
+            self.real_ok=None
+        def ok(self):
+            if self.real_ok:
+                self.real_ok(self.check())
+        def check(self):
+            return [value.get() for value in self.checks_value if value.get()]
+        def select(self,tags):
+            for tag,chk in self.checks.items():
+                if tag in tags:
+                    chk.select()
+                else:
+                    chk.deselect()
+    def txt_color(txt):
+        for i in range(6,0,-1):
+            txt.tag_config(str(i), background=colors.get(i,'white'), foreground="black")
+            txt.tag_config(i, background=colors.get(i,'white'), foreground="black")
+        txt.tag_config('', background="white", foreground="black")
+    def real_txt_insert(txt, txt_data):
+        for value,style in txt_data:
+            txt.insert('end',value,style)
+
     root = tk.Tk()
     root.title("Arknights Recruitment Tag")
     
     txt_frame = tk.Frame(root, bg='white', width=450, height=60, pady=3)
     txtm_frame = tk.Frame(root, bg='white', width=450, height=60, pady=3)
     
-    class Checkbar(tk.Frame):
-        def __init__(self, parent=None, picks=[]):
-            super().__init__(parent)
-            self.checks_value = []
-            self.checks=[]
-            for r,checklist in enumerate(picks):
-                for c,pick in enumerate(checklist):
-                    value = tk.StringVar(value="")
-                    chk = tk.Checkbutton(self, text=pick, variable=value, onvalue=pick, offvalue="", indicatoron=False)
-                    chk.grid(row=r, column=c)
-                    self.checks.append(chk)
-                    self.checks_value.append(value)
-            btnk = tk.Button(self,text="Ok",command=self.ok)
-            btnc = tk.Button(self,text="Clear",command=lambda: [check.deselect() for check in self.checks])
-            btnk.grid(row=len(picks), column=0)
-            btnc.grid(row=len(picks), column=1)
-            self.func=None
-        def ok(self):
-            if self.func:
-                self.func(self.check())
-        def check(self):
-            return [value.get() for value in self.checks_value if value.get()]
+    colors={6:'darkorange', 5:'gold', 4:'plum', 3:'deepskyblue', 2:'lightyellow', 1:'lightgrey', }
+
     check_frame=Checkbar(root,[Character.profession,Character.position,Character.tagList])
     print(Character.profession) 
     print(Character.position) 
@@ -337,20 +320,10 @@ def ui_hr_tag(tags=[]):
     txtm = tk.Text(txtm_frame, wrap='none',width=5,height=10)
     txt.pack(fill="both", expand=True)
     txtm.pack(fill="both", expand=True)
-    def txt_color(txt):
-        txt.tag_config('6', background="darkorange", foreground="black")
-        txt.tag_config('5', background="gold", foreground="black")
-        txt.tag_config('4', background="plum", foreground="black")
-        txt.tag_config('3', background="deepskyblue", foreground="black")
-        txt.tag_config('2', background="lightyellow", foreground="black")
-        txt.tag_config('1', background="lightgrey", foreground="black")
-        txt.tag_config('', background="white", foreground="black")
+    
     txt_color(txt)
     txt_color(txtm)
-    def real_txt_insert(txt, txt_data):
-        for value,style in txt_data:
-            txt.insert('end',value,style)
-
+    
     txt_data = Character.hr_all()
     txt.configure(state='normal')
     real_txt_insert(txt, txt_data)
@@ -358,23 +331,21 @@ def ui_hr_tag(tags=[]):
     txt_width=len(max(text, key=len))
     txt.configure(height=len(text),width=txt_width)
     txt.configure(state='disabled')
-    
     def ok(tags):
         txt_data=[]
-        txt_data+=Character.tagset_format(tier_str='345',taglist=tags,maxtag=len(tags))
-        txt_data+=Character.tagset_format(tier_str='2345',taglist=tags,maxtag=len(tags))
-        txt_data+=Character.tagset_format(tier_str='1234',taglist=tags,maxtag=len(tags))
+        txt_data+=Character.tagset_format(taglist=tags,maxtag=len(tags))
         txtm.configure(state='normal')
         txtm.delete("1.0",tk.END)
-        txtm.insert('end', f"{tags}")
+        txtm.insert('end', f"{tags}\n")
         real_txt_insert(txtm, txt_data)
         text=txtm.get('1.0', 'end-1c').splitlines()
         width=len(max(text, key=len))
         txtm.configure(height=len(text),width=max(width,txt_width))
         txtm.configure(state='disabled')
     if tags:
+        check_frame.select(tags)
         ok(tags)
-    check_frame.func=ok
+    check_frame.real_ok=ok
     root.mainloop()
     
 if __name__ == "__main__":
