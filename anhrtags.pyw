@@ -5,9 +5,21 @@ from functools import cache
 import urllib.request
 import tkinter as tk
 from itertools import combinations
-
+try:
+    import cv2 as cv
+    import pytesseract
+    import win32gui
+    import win32ui
+except:
+    pass
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
+
+#1 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
+#2 pip install --upgrade pywin32 pytesseract opencv-python
+#3 set pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = r'../../Tesseract-OCR/tesseract.exe'
+
 def subset(taglist,maxtag=6,self=0):
     for i in range(1,min(maxtag+1,len(taglist)+self)):
         for s in combinations(taglist, i):
@@ -52,12 +64,20 @@ class Character():
 
     @staticmethod
     def recruitable(char_id):
-        # Character._tl_akhr().get(char_id,{}).get('globalHidden')!=True
-        # 'Recruitment' in (char_data.get('itemObtainApproach','') or '')
-        # char_data.get('isNotObtainable','')==False
         if Character._tl_akhr().get(char_id) and Character._tl_akhr().get(char_id,{}).get('globalHidden')!=True:
             return True
 
+    profession_name = {  
+        "WARRIOR": "Guard",
+        "SNIPER": "Sniper",
+        "TANK": "Defender",
+        "MEDIC": "Medic",
+        "SUPPORT": "Supporter",
+        "CASTER": "Caster",
+        "SPECIAL": "Specialist",
+        "PIONEER": "Vanguard",
+    }
+    
     @staticmethod
     @cache
     def get_all(key):
@@ -76,51 +96,66 @@ class Character():
                         values.append(value)
         return values
 
-    profession_name = {  
-        "WARRIOR": "Guard",
-        "SNIPER": "Sniper",
-        "TANK": "Defender",
-        "MEDIC": "Medic",
-        "SUPPORT": "Supporter",
-        "CASTER": "Caster",
-        "SPECIAL": "Specialist",
-        "PIONEER": "Vanguard",
-    }
     @staticmethod
     @cache
-    def _recruit_tag(tier_str='345'):        
+    def profession():
+        return tuple(sorted([Character.profession_name.get(profession,profession) for profession in Character.get_all('profession')]))
+
+    @staticmethod
+    @cache
+    def position():
+        return tuple(sorted(Character.get_all('position')))
+
+    @staticmethod
+    @cache
+    def tagList():
+        return tuple(sorted(Character.get_all('tagList')))
+
+    @staticmethod
+    @cache
+    def all_tags():
+        return tuple(Character.tagList()+Character.profession()+Character.position())
+        
+    @staticmethod
+    @cache
+    def all_tags_sorted():
+        return sorted(Character.all_tags(), key=len, reverse=True)
+
+    @staticmethod
+    @cache
+    def recruits_tag(tier_str='345'):        
         # 1234 2345 345 5 6
         tier=[]
         for i in tier_str:
             tier.append(f'TIER_{i}')
 
-        character_tag={}
+        characters_tag={}
         for char_id,char_data in Character._character_table().items():
             if Character.recruitable(char_id) and char_data.get('rarity','None') in tier:
-                tags=set(char_data.get('tagList',[])or[])
+                char_tags=set(char_data.get('tagList',[])or[])
                 profession=char_data.get('profession')
-                tags.add(Character.profession_name.get(profession,profession))
-                tags.add(char_data.get('position'))
-                character_tag[char_id]=tags
-        return character_tag
+                char_tags.add(Character.profession_name.get(profession,profession))
+                char_tags.add(char_data.get('position'))
+                characters_tag[char_id]=char_tags
+        return characters_tag
         
     @staticmethod
-    def search(tag,tier_str='345'):
+    def char_ids(tag,tier_str='345'):
         if isinstance(tag,str):
             tag=[tag]
-        return Character.search_(frozenset(tag),tier_str)
+        return Character._char_ids(frozenset(tag),tier_str)
 
     @staticmethod
     @cache
-    def search_(tag,tier_str='345'):
-        def _search():
-            for name,_tag in Character._recruit_tag(tier_str).items():
-                if set(tag).issubset(_tag):
-                    yield name
-        return list(_search())
+    def _char_ids(tag,tier_str='345'):
+        def search():
+            for char_id,char_tags in Character.recruits_tag(tier_str).items():
+                if set(tag).issubset(char_tags):
+                    yield char_id
+        return list(search())
         
     @staticmethod
-    def search_rarity(char_ids):
+    def char_ids_rarity(char_ids):
         if char_ids:
             raritys=[]
             for char_id in char_ids:
@@ -129,9 +164,6 @@ class Character():
             raritys.sort()
             return int(raritys[0][-1:])
 
-    @staticmethod
-    def _rarity(tag,tier_str='345'):
-        return Character.search_rarity(Character.search(tag,tier_str))
         
     @staticmethod
     def rarity(tag) -> int:
@@ -145,15 +177,19 @@ class Character():
         return rarity
 
     @staticmethod
+    def _rarity(tag,tier_str='345'):
+        return Character.char_ids_rarity(Character.char_ids(tag,tier_str))
+        
+    @staticmethod
     @cache
     def tag_byrarity():
-        x = {tag:Character.rarity(tag) for tag in Character.tagList+Character.profession+Character.position}
+        x = {tag:Character.rarity(tag) for tag in Character.all_tags()}
         return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
 
     @staticmethod
     def comb(taglist=None,maxtag=6):
         if taglist==None:
-            taglist=Character.all_tagList[:]
+            taglist=Character.all_tags()
         tagset_list=list(subset(taglist,maxtag=maxtag,self=1))
         tagset_list_norepeat=[]
         for tagset in tagset_list:
@@ -254,10 +290,80 @@ class Character():
             save_result(txt_data)
         return txt_data
 
-Character.profession=sorted([Character.profession_name.get(profession,profession) for profession in Character.get_all('profession')])
-Character.position=sorted(Character.get_all('position'))
-Character.tagList=sorted(Character.get_all('tagList'))
-Character.all_tagList=sorted(Character.tagList+Character.profession+Character.position)
+def app_image(img,app_title='Arknights',border=False,scaled=True):
+    from ctypes import windll
+    from PIL import Image
+    def remove_img(img):
+        if os.path.isfile(img):
+            os.remove(img)
+    remove_img(img)
+    hwnd = win32gui.FindWindow(None, app_title)
+    if scaled:
+        # if use a high DPI display or >100% scaling size
+        windll.user32.SetProcessDPIAware()
+    if border:
+        left, top, right, bot = win32gui.GetWindowRect(hwnd)
+    else:
+        left, top, right, bot = win32gui.GetClientRect(hwnd)
+    w = right - left
+    h = bot - top
+    hwndDC = win32gui.GetWindowDC(hwnd)
+    mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
+    saveDC = mfcDC.CreateCompatibleDC()
+    saveBitMap = win32ui.CreateBitmap()
+    saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
+    saveDC.SelectObject(saveBitMap)
+    if border:
+        result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 2)
+    else:
+        result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
+    # print(result)
+    bmpinfo = saveBitMap.GetInfo()
+    bmpstr = saveBitMap.GetBitmapBits(True)
+    im = Image.frombuffer('RGB', (bmpinfo['bmWidth'], bmpinfo['bmHeight']), bmpstr, 'raw', 'BGRX', 0, 1)
+    win32gui.DeleteObject(saveBitMap.GetHandle())
+    saveDC.DeleteDC()
+    mfcDC.DeleteDC()
+    win32gui.ReleaseDC(hwnd, hwndDC)
+    if result == 1:
+        im.save(img)
+
+def resize(image, width=None, height=None, inter=cv.INTER_AREA):
+    dim = None
+    (h, w) = image.shape[:2]
+    if width is None and height is None:
+        return image
+    if width is None:
+        r = height / float(h)
+        dim = (int(w * r), height)
+    else:
+        r = width / float(w)
+        dim = (width, int(h * r))
+    return cv.resize(image, dim, interpolation=inter)
+    
+def ocr_tag(setup=False):
+    return list(_ocr_tag(setup=setup))
+def _ocr_tag(setup=False):
+    img_anhrtags = 'tmp_anhrtags.png'
+    app_image(img=img_anhrtags)
+    img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
+    if setup:
+        print(f'{img.shape=}')
+    img=resize(img,width=1022)
+    if setup:
+        ROIs = cv.selectROIs('Select tag area, 5 times, ok=SPACE, finish=ESC', img, showCrosshair=False, fromCenter=False, printNotice=True)
+        print(f'ROIs={[[x,y,w,h] for x,y,w,h in ROIs]}')
+    else:
+        ROIs= [[301, 287, 113,  36], [434, 287, 113,  39], [567, 288, 115,  34], [301, 344, 115,  36], [434, 345, 112,  36]]
+    
+    for idx,rect in enumerate(ROIs):
+        x,y,w,h=rect
+        img_crop=img[y:y+h,x:x+w]
+        tag_ocr = pytesseract.image_to_string(img_crop)
+        for tag in Character.all_tags_sorted():
+            if tag in tag_ocr:
+                yield tag
+                break
 
 def ui_hr_tag(tags=[]):
     class Checkbar(tk.Frame):
@@ -274,8 +380,14 @@ def ui_hr_tag(tags=[]):
                     self.checks_value.append(value)
             btnk = tk.Button(self,text="Ok",command=self.ok)
             btnc = tk.Button(self,text="Clear",command=lambda:self.select([]))
+            def ocr():
+                tags=ocr_tag()
+                self.select(tags)
+                self.real_ok(tags)
+            btnocr = tk.Button(self,text="OCR",command=ocr)
             btnk.grid(row=len(picks), column=0)
             btnc.grid(row=len(picks), column=1)
+            btnocr.grid(row=len(picks), column=2)
             self.real_ok=None
         def ok(self):
             if self.real_ok:
@@ -305,10 +417,10 @@ def ui_hr_tag(tags=[]):
     
     colors={6:'darkorange', 5:'gold', 4:'plum', 3:'deepskyblue', 2:'lightyellow', 1:'lightgrey', }
 
-    check_frame=Checkbar(root,[Character.profession,Character.position,Character.tagList])
-    print(Character.profession) 
-    print(Character.position) 
-    print(Character.tagList)
+    check_frame=Checkbar(root,[Character.profession(),Character.position(),Character.tagList()])
+    print(Character.profession()) 
+    print(Character.position()) 
+    print(Character.tagList())
 
     root.grid_rowconfigure(1, weight=1)
     root.grid_columnconfigure(0, weight=1)
@@ -351,4 +463,7 @@ def ui_hr_tag(tags=[]):
     
 if __name__ == "__main__":
     tags=['Caster', 'Defense']
-    ui_hr_tag(tags)
+    if 0:
+        ocr_tag(setup=True)
+    else:
+        ui_hr_tag(tags)
