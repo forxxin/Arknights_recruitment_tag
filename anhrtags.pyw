@@ -1,4 +1,5 @@
 import os
+import sys
 import pickle
 import json
 from functools import cache
@@ -18,7 +19,7 @@ try:
     pytesseract.pytesseract.tesseract_cmd = os.path.abspath(r'../../Tesseract-OCR/tesseract.exe')
 except:
     pass
-
+    
 def subset(taglist,maxtag=6,self=0):
     for i in range(1,min(maxtag+1,len(taglist)+self)):
         for s in combinations(taglist, i):
@@ -339,30 +340,91 @@ def resize(image, width=None, height=None):
         r = width / float(w)
         dim = (width, int(h * r))
     return cv.resize(image, dim, interpolation=cv.INTER_AREA)
-    
-def ocr_tag(setup=False):
-    return list(_ocr_tag(setup=setup))
-def _ocr_tag(setup=False):
-    img_anhrtags = 'tmp_anhrtags.png'
+
+class roi_data():
+    file='roi.json'
+    @staticmethod
+    def load():
+        if not os.path.isfile(roi_data.file):
+            with open(roi_data.file, "a", encoding="utf-8"):
+                pass
+        with open(roi_data.file, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except:
+                return {}
+    @staticmethod
+    def save(data):
+        with open(roi_data.file, "w", encoding="utf-8") as f:
+            json.dump(data,f)
+
+def ocr_tag(img_anhrtags, setup=False):
     app_image(img=img_anhrtags)
+    return list(img_tag(img_anhrtags,setup=setup))
+def img_tag(img_anhrtags,setup=False):
     img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
-    if setup:
-        print(f'{img.shape=}')
-    img=resize(img,width=1022)
-    if setup:
-        ROIs = cv.selectROIs('Select tag area, 5 times, ok=SPACE, finish=ESC', img, showCrosshair=False, fromCenter=False, printNotice=True)
-        print(f'ROIs={[[x,y,w,h] for x,y,w,h in ROIs]}')
-    else:
-        ROIs= [[301, 287, 113,  36], [434, 287, 113,  39], [567, 288, 115,  34], [301, 344, 115,  36], [434, 345, 112,  36]]
-    
+    img=resize(img,width=1000)
+    height=int(img.shape[0])
+    height_key=str(height)
+    print(f'\nimg_tag:\n{height=}')
+    def set_roi():
+        ROIs = cv.selectROIs('Select 5 tag area, ok=Space/Enter, finish=ESC', img, showCrosshair=False, fromCenter=False, printNotice=True)
+        cv.destroyAllWindows()
+        ROIs = [[int(x),int(y),int(w),int(h)] for x,y,w,h in ROIs]
+        print(f'{ROIs=}')
+        if ROIs:
+            roidata=roi_data().load()
+            roidata[height_key]=ROIs
+            roi_data().save(roidata)
+            return roidata
+        return {}
+    roidata=roi_data().load()
+    if setup or (height_key not in roidata) or (height_key in roidata and height<1000 and not roidata[height_key]):
+        roidata=set_roi()
+    ROIs=roidata[height_key]
     for idx,rect in enumerate(ROIs):
         x,y,w,h=rect
         img_crop=img[y:y+h,x:x+w]
-        tag_ocr = pytesseract.image_to_string(img_crop)
-        for tag in Character.all_tags_sorted():
-            if tag in tag_ocr:
-                yield tag
-                break
+        tag_ocrs = pytesseract.image_to_string(img_crop)
+        taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
+        print(tag_ocrs.strip())
+        tags=[]
+        for tag_ocr in tag_ocrs.lower().split():
+            for taglow,tag in taglow_tag.items():
+                if taglow in tag_ocr:
+                    if tag not in tags:
+                        yield tag
+                        tags.append(tag)
+                    break
+
+def adb_tag(img_anhrtags,setup=False):
+    import shellcmd1 as shellcmd
+    import pprint
+    def _adb_tag(adev):
+        if isinstance(adev,shellcmd.AndroidDev):
+            img = adev.screencap(name1=img_anhrtags,open_img=False)
+            if img:
+                return list(img_tag(img,setup=setup))
+    # adb usb
+    try:
+        adev = shellcmd.AndroidDev()
+        tags = _adb_tag(adev)
+        if tags:
+            return tags
+    except:
+        pass
+    mdns = shellcmd.AndroidDev.adb_mdns()
+    pprint.pprint(mdns)
+    adev_name=None
+    for device,info in mdns.items():
+        adev_name = info['device_ip']
+        if adev_name:    
+            # adb wireless 
+            adev = shellcmd.AndroidDev(adev_name, adb_tcpip=False)
+            tags = _adb_tag(adev)
+            if tags:
+                return tags
+    return []
 
 def ui_hr_tag(tags=[]):
     class Checkbar(tk.Frame):
@@ -378,15 +440,32 @@ def ui_hr_tag(tags=[]):
                     self.checks[tag]=chk
                     self.checks_value.append(value)
             btnk = tk.Button(self,text="Ok",command=self.ok)
-            btnc = tk.Button(self,text="Clear",command=lambda:self.select([]))
+            btnc = tk.Button(self,text="Clear",command=lambda:[self.select([]), self.ui_clear()])
+            img_anhrtags = 'tmp_anhrtags.png'
             def ocr():
-                tags=ocr_tag()
+                self.ui_clear()
+                tags=ocr_tag(img_anhrtags)
                 self.select(tags)
                 self.real_ok(tags)
             btnocr = tk.Button(self,text="OCR",command=ocr)
+            def adb():
+                self.ui_clear()
+                tags=adb_tag(img_anhrtags)
+                self.select(tags)
+                self.real_ok(tags)
+            def draw_roi():
+                self.ui_clear()
+                tags=list(img_tag(img_anhrtags,setup=True))
+                print(tags)
+                self.select(tags)
+                self.real_ok(tags)
+            btnadb = tk.Button(self,text="adb",command=adb)
+            btnroi = tk.Button(self,text="draw ROI",command=draw_roi)
             btnk.grid(row=len(picks), column=0)
             btnc.grid(row=len(picks), column=1)
             btnocr.grid(row=len(picks), column=2)
+            btnadb.grid(row=len(picks), column=3)
+            btnroi.grid(row=len(picks), column=4)
             self.real_ok=None
         def ok(self):
             if self.real_ok:
@@ -443,6 +522,11 @@ def ui_hr_tag(tags=[]):
     txt_width=len(max(text, key=len))
     txt.configure(height=len(text),width=txt_width)
     txt.configure(state='disabled')
+    def clear():
+        txtm.configure(state='normal')
+        txtm.delete("1.0",tk.END)
+        txtm.configure(state='disabled')
+        txtm.update()
     def ok(tags):
         txt_data=[]
         txt_data+=Character.tagset_format(taglist=tags,maxtag=len(tags))
@@ -458,11 +542,9 @@ def ui_hr_tag(tags=[]):
         check_frame.select(tags)
         ok(tags)
     check_frame.real_ok=ok
+    check_frame.ui_clear=clear
     root.mainloop()
-    
+
 if __name__ == "__main__":
     tags=['Caster', 'Defense']
-    if 0:
-        ocr_tag(setup=True)
-    else:
-        ui_hr_tag(tags)
+    ui_hr_tag(tags)
