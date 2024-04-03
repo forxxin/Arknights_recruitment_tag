@@ -9,4 +9,6 @@ Install tesseract [https://github.com/UB-Mannheim/tesseract/wiki](https://github
 
 edit code:   ```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
 
+adb to PATH https://developer.android.com/tools/releases/platform-tools
+
 bug: click OCR button will change ui scaling
