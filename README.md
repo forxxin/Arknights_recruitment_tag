@@ -1,5 +1,4 @@
-![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/82ce5b91-24c4-40a2-a536-fb0978d8824f)
-
+![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/230936b2-7130-4798-8415-f99a3978b446)
 
 Python 3.12.2
 
