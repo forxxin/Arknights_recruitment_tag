@@ -26,7 +26,7 @@ def subset(taglist,maxtag=6,self=0):
             yield frozenset(s)
 
 class Character():
-    version=8
+    version=9
     @staticmethod
     @cache
     def _tl_akhr():
