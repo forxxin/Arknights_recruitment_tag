@@ -16,8 +16,9 @@ add adb to PATH https://developer.android.com/tools/releases/platform-tools
    
 # hint
     draw roi example:
-    draw1 Enter draw2 Enter Esc
-![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/79a78e2c-0132-458b-9e4b-504ba6a5b1a3)
+    draw1 Enter draw2 Enter ... draw6 Enter Esc
+![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/83db558f-c286-4b61-88ea-8da3c033f089)
+
 
   to use wireless adb:
   ```adb pair 192.168.0.39:15468 314692```
