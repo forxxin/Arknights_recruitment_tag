@@ -12,3 +12,7 @@ edit code:   ```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.ex
 adb to PATH https://developer.android.com/tools/releases/platform-tools
 
 bug: click OCR button will change ui scaling
+
+draw roi example:
+draw1 Enter draw2 Enter Esc
+![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/79a78e2c-0132-458b-9e4b-504ba6a5b1a3)
