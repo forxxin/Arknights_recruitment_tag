@@ -20,5 +20,5 @@ add adb to PATH https://developer.android.com/tools/releases/platform-tools
 ![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/79a78e2c-0132-458b-9e4b-504ba6a5b1a3)
 
   to use wireless adb:
-  ```adb pair 192.168.3.199:41327 027352```
+  ```adb pair 192.168.0.39:15468 314692```
   
