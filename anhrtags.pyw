@@ -6,6 +6,7 @@ from functools import cache
 import urllib.request
 import tkinter as tk
 from itertools import combinations
+import threading
 #1 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
 #2 pip install --upgrade pywin32 pytesseract opencv-python
 #3 set pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
@@ -418,6 +419,7 @@ def adb_tag(img_anhrtags,setup=False):
     adev_name=None
     for device,info in mdns.items():
         adev_name = info['device_ip']
+        # adev_name = device
         if adev_name:    
             # adb wireless 
             adev = shellcmd.AndroidDev(adev_name, adb_tcpip=False)
@@ -439,15 +441,12 @@ def ui_hr_tag(tags=[]):
                     chk.grid(row=r, column=c)
                     self.checks[tag]=chk
                     self.checks_value.append(value)
-            btnk = tk.Button(self,text="Ok",command=self.ok)
-            btnc = tk.Button(self,text="Clear",command=lambda:[self.select([]), self.ui_clear()])
             img_anhrtags = 'tmp_anhrtags.png'
             def ocr():
                 self.ui_clear()
                 tags=ocr_tag(img_anhrtags)
                 self.select(tags)
                 self.real_ok(tags)
-            btnocr = tk.Button(self,text="OCR",command=ocr)
             def adb():
                 self.ui_clear()
                 tags=adb_tag(img_anhrtags)
@@ -459,16 +458,34 @@ def ui_hr_tag(tags=[]):
                 print(tags)
                 self.select(tags)
                 self.real_ok(tags)
-            btnadb = tk.Button(self,text="adb",command=adb)
-            btnroi = tk.Button(self,text="draw ROI",command=draw_roi)
-            btnk.grid(row=len(picks), column=0)
-            btnc.grid(row=len(picks), column=1)
-            btnocr.grid(row=len(picks), column=2)
-            btnadb.grid(row=len(picks), column=3)
-            btnroi.grid(row=len(picks), column=4)
+            column_btn=0
+            def create_btn(text,command):
+                nonlocal column_btn
+                def real_on_click():
+                    real_on_click.btn.config(state=tk.DISABLED) #prevent call twice
+                    real_on_click.btn.update()
+                    try:
+                        command()
+                    except:
+                        pass
+                    real_on_click.btn.config(state=tk.NORMAL)
+                def on_click():
+                    if not (getattr(on_click,'timer',None) and on_click.timer.is_alive()): #prevent call twice
+                        on_click.timer = threading.Timer(0, real_on_click) 
+                        on_click.timer.start()
+                btn = tk.Button(self,text=text,command=on_click)
+                real_on_click.btn=btn
+                btn.grid(row=len(picks), column=column_btn)
+                column_btn+=1
+            create_btn('Ok',self.ok)
+            create_btn('Clear',lambda:[self.select([]), self.ui_clear()])
+            create_btn('OCR-Google Play Games beta',ocr)
+            create_btn('OCR-adb',adb)
+            create_btn('draw ROI',draw_roi)
+            
             self.real_ok=None
         def ok(self):
-            if self.real_ok:
+            if getattr(self,'real_ok',None):
                 self.real_ok(self.check())
         def check(self):
             return [value.get() for value in self.checks_value if value.get()]
@@ -503,9 +520,9 @@ def ui_hr_tag(tags=[]):
     root.grid_rowconfigure(1, weight=1)
     root.grid_columnconfigure(0, weight=1)
     
-    txt_frame.grid(row=0, sticky="nsew")
-    check_frame.grid(row=1, sticky="nsew")
-    txtm_frame.grid(row=2, sticky="nsew")
+    txt_frame.grid(row=0, sticky="wens")
+    check_frame.grid(row=1, sticky="wes")
+    txtm_frame.grid(row=2, sticky="wens")
 
     txt = tk.Text(txt_frame, wrap='none',width=5,height=10)
     txtm = tk.Text(txtm_frame, wrap='none',width=5,height=10)
