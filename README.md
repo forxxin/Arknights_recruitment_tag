@@ -14,7 +14,7 @@ add adb.exe to PATH https://developer.android.com/tools/releases/platform-tools
 
 ## Usage
 ### draw roi example:
-    draw1 Enter draw2 Enter ... draw6 Enter Esc
+draw1 Enter draw2 Enter ... draw6 Enter Esc
 ![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/83db558f-c286-4b61-88ea-8da3c033f089)
 
 
