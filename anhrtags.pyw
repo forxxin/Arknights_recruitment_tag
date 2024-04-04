@@ -27,7 +27,7 @@ def subset(taglist,maxtag=6,self=0):
             yield frozenset(s)
 
 class Character():
-    version=9
+    version=11
     @staticmethod
     @cache
     def _tl_akhr():
@@ -291,7 +291,7 @@ class Character():
             save_result(txt_data)
         return txt_data
 
-def app_image(img,app_title='Arknights',border=False,scaled=True):
+def windows_image(img,app_title='Arknights',border=False,scaled=True):
     from ctypes import windll
     from PIL import Image
     def remove_img(img):
@@ -301,7 +301,9 @@ def app_image(img,app_title='Arknights',border=False,scaled=True):
     hwnd = win32gui.FindWindow(None, app_title)
     if scaled:
         # if use a high DPI display or >100% scaling size
-        windll.user32.SetProcessDPIAware()
+        SetProcessDPIAware=windll.user32.SetProcessDPIAware()
+        # print(f'{SetProcessDPIAware=}')
+        pass
     if border:
         left, top, right, bot = win32gui.GetWindowRect(hwnd)
     else:
@@ -318,7 +320,6 @@ def app_image(img,app_title='Arknights',border=False,scaled=True):
         result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 2)
     else:
         result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
-    # print(result)
     bmpinfo = saveBitMap.GetInfo()
     bmpstr = saveBitMap.GetBitmapBits(True)
     im = Image.frombuffer('RGB', (bmpinfo['bmWidth'], bmpinfo['bmHeight']), bmpstr, 'raw', 'BGRX', 0, 1)
@@ -328,6 +329,7 @@ def app_image(img,app_title='Arknights',border=False,scaled=True):
     win32gui.ReleaseDC(hwnd, hwndDC)
     if result == 1:
         im.save(img)
+    # windll.user32.SetProcessDpiAwareness(1.5)
 
 def resize(image, width=None, height=None):
     dim = None
@@ -360,7 +362,11 @@ class roi_data():
             json.dump(data,f)
 
 def ocr_tag(img_anhrtags, setup=False):
-    app_image(img=img_anhrtags)
+    # windows_image(img_anhrtags) # windows_image will change process dpi
+    from multiprocessing import Process
+    p = Process(target=windows_image, args=(img_anhrtags,))
+    p.start()
+    p.join()
     return list(img_tag(img_anhrtags,setup=setup))
 def img_tag(img_anhrtags,setup=False):
     img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
@@ -434,13 +440,20 @@ def ui_hr_tag(tags=[]):
             super().__init__(parent)
             self.checks_value = []
             self.checks={}
+            # max_c=0
             for r,checklist in enumerate(picks):
+                tag_frame = tk.Frame(self, bg='white')
                 for c,tag in enumerate(checklist):
                     value = tk.StringVar(value="")
-                    chk = tk.Checkbutton(self, text=tag, variable=value, onvalue=tag, offvalue="", indicatoron=False,foreground=colors.get(Character.rarity(tag),'black'))
-                    chk.grid(row=r, column=c)
+                    chk = tk.Checkbutton(tag_frame, text=tag, variable=value, onvalue=tag, offvalue="", indicatoron=False,foreground=colors.get(Character.rarity(tag),'black'))
+                    chk.grid(row=0, column=c)
                     self.checks[tag]=chk
                     self.checks_value.append(value)
+                # max_c = max_c if max_c>=len(checklist) else len(checklist)
+                tag_frame.grid(row=r, column=0, sticky="wens")
+            btn_frame = tk.Frame(self, bg='white')
+            btn_frame.grid(row=len(picks), column=0, sticky="wens")
+            # btn_frame.pack(fill="both", expand=True)
             img_anhrtags = 'tmp_anhrtags.png'
             def ocr():
                 self.ui_clear()
@@ -473,7 +486,7 @@ def ui_hr_tag(tags=[]):
                     if not (getattr(on_click,'timer',None) and on_click.timer.is_alive()): #prevent call twice
                         on_click.timer = threading.Timer(0, real_on_click) 
                         on_click.timer.start()
-                btn = tk.Button(self,text=text,command=on_click)
+                btn = tk.Button(btn_frame,text=text,command=on_click)
                 real_on_click.btn=btn
                 btn.grid(row=len(picks), column=column_btn)
                 column_btn+=1
@@ -507,8 +520,8 @@ def ui_hr_tag(tags=[]):
     root = tk.Tk()
     root.title("Arknights Recruitment Tag")
     
-    txt_frame = tk.Frame(root, bg='white', width=450, height=60, pady=3)
-    txtm_frame = tk.Frame(root, bg='white', width=450, height=60, pady=3)
+    txt_frame = tk.Frame(root, bg='white', pady=3)
+    txtm_frame = tk.Frame(root, bg='white', pady=3)
     
     colors={6:'darkorange', 5:'gold', 4:'plum', 3:'deepskyblue', 2:'lightyellow', 1:'lightgrey', }
 
