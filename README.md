@@ -1,4 +1,5 @@
-![Uploading image.png…]()
+![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/d48e148c-3a14-491c-ae74-3eed0b0e807a)
+
 
 
 
