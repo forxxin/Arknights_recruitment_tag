@@ -5,6 +5,7 @@ import json
 from functools import cache
 import urllib.request
 import tkinter as tk
+from tkinter import ttk
 from itertools import combinations
 import threading
 #1 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
@@ -27,32 +28,30 @@ def subset(taglist,maxtag=6,self=0):
             yield frozenset(s)
 
 class Character():
-    version=11
+    version=14
     @staticmethod
     @cache
-    def _tl_akhr():
-        url_tl_akhr = 'https://github.com/Aceship/AN-EN-Tags/raw/master/json/tl-akhr.json'
-        file_tl_akhr = 'tl-akhr.json'
+    def json_tl(name):
+        url_tl_akhr = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/tl-{name}.json'
+        file_tl_akhr = f'tl-{name}.json'
         if not os.path.isfile(file_tl_akhr):
             urllib.request.urlretrieve(url_tl_akhr, file_tl_akhr)
         with open(file_tl_akhr, "r", encoding="utf-8") as f:
-            return {akhr.get('id'):akhr for akhr in json.load(f)}
+            if name=='akhr':
+                return {item.get('id'):item for item in json.load(f)}
+            # if name=='type':
+                # return {item.get('type_data'):item for item in json.load(f)}
 
     @staticmethod
     @cache
-    def _character_table():
-        # lang='ja_JP'
-        # lang='ko_KR'
-        # lang='zh_TW'
-        # lang='zh_CN'
-        lang='en_US'
+    def _character_table(lang='en_US'):
         url_character_table = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/gamedata/{lang}/gamedata/excel/character_table.json'
         file_character_table = f'character_table_{lang}.json'
         if not os.path.isfile(file_character_table):
             urllib.request.urlretrieve(url_character_table, file_character_table)
         with open(file_character_table, "r", encoding="utf-8") as f:
             return json.load(f)
-
+    
     @staticmethod
     def key_type(typa):
         keys=[]
@@ -65,9 +64,13 @@ class Character():
 
     @staticmethod
     def recruitable(char_id):
-        if Character._tl_akhr().get(char_id) and Character._tl_akhr().get(char_id,{}).get('globalHidden')!=True:
+        if Character.json_tl('akhr').get(char_id) and Character.json_tl('akhr').get(char_id,{}).get('globalHidden')!=True:
             return True
 
+    position_name = {
+        "RANGED": "Ranged",
+        "MELEE": "Melee",
+    }
     profession_name = {  
         "WARRIOR": "Guard",
         "SNIPER": "Sniper",
@@ -93,6 +96,8 @@ class Character():
                     value = char_data.get(key,'')
                     if key=='profession':
                         value=Character.profession_name.get(value,value)
+                    elif key=='position':
+                        value=Character.position_name.get(value,value)
                     if value not in values:
                         values.append(value)
         return values
@@ -105,7 +110,7 @@ class Character():
     @staticmethod
     @cache
     def position():
-        return tuple(sorted(Character.get_all('position')))
+        return tuple(sorted([Character.position_name.get(position,position) for position in Character.get_all('position')]))
 
     @staticmethod
     @cache
@@ -136,7 +141,8 @@ class Character():
                 char_tags=set(char_data.get('tagList',[])or[])
                 profession=char_data.get('profession')
                 char_tags.add(Character.profession_name.get(profession,profession))
-                char_tags.add(char_data.get('position'))
+                position=char_data.get('position')
+                char_tags.add(Character.position_name.get(position,position))
                 characters_tag[char_id]=char_tags
         return characters_tag
         
@@ -156,16 +162,17 @@ class Character():
         return list(search())
         
     @staticmethod
-    def char_ids_rarity(char_ids):
+    def char_id_rarity(char_ids):
         if char_ids:
+            if isinstance(char_ids,str):
+                return [int(Character._character_table()[char_ids].get('rarity')[-1:])]
             raritys=[]
             for char_id in char_ids:
                 rarity = Character._character_table()[char_id].get('rarity')
+                rarity = int(rarity[-1:])
                 raritys.append(rarity)
-            raritys.sort()
-            return int(raritys[0][-1:])
-
-        
+            return raritys
+            
     @staticmethod
     def rarity(tag) -> int:
         rarity = Character._rarity(tag, '345')
@@ -179,7 +186,9 @@ class Character():
 
     @staticmethod
     def _rarity(tag,tier_str='345'):
-        return Character.char_ids_rarity(Character.char_ids(tag,tier_str))
+        raritys = Character.char_id_rarity(Character.char_ids(tag,tier_str))
+        if raritys:
+            return min(raritys)
         
     @staticmethod
     @cache
@@ -188,27 +197,29 @@ class Character():
         return {k: v for k, v in sorted(x.items(), key=lambda item: item[1], reverse=True)}
 
     @staticmethod
-    def comb(taglist=None,maxtag=6):
+    @cache
+    def comb(taglist=None,maxtag=6,shorten=True):
         if taglist==None:
             taglist=Character.all_tags()
         tagset_list=list(subset(taglist,maxtag=maxtag,self=1))
-        tagset_list_norepeat=[]
+        tagset_list_valid=[]
         for tagset in tagset_list:
             ok=True
             if Character.rarity(tagset):
                 for subtagset in subset(tagset,maxtag=maxtag,self=0):
-                    if Character.rarity(subtagset) and Character.rarity(tagset)<=Character.rarity(subtagset):
+                    if Character.rarity(subtagset) and (shorten and Character.rarity(tagset)<=Character.rarity(subtagset)):
                         ok=False
                         break
             else:
                 ok=False
             if ok:
-                tagset_list_norepeat.append(tagset)
-        return tagset_list_norepeat
-
+                tagset_list_valid.append(tagset)
+        return tagset_list_valid
+        
     @staticmethod
+    @cache
     def comb_dict(taglist=None,maxtag=6):
-        tagset_list = Character.comb(taglist,maxtag)
+        tagset_list = Character.comb(taglist,maxtag,shorten=True)
         tagset_dict={}
         added=[]
         for tag in Character.tag_byrarity():
@@ -224,6 +235,47 @@ class Character():
     @cache
     def min_tier(tier_str):
         return min([int(i) for i in tier_str])
+        
+    @staticmethod
+    def char_ids_format(taglist=None,maxtag=6):
+        if taglist==None:
+            return Character._char_ids_format(taglist,maxtag)
+        else:
+            return Character._char_ids_format(frozenset(taglist),maxtag)
+    
+    @staticmethod
+    @cache
+    def _char_ids_format(taglist=None,maxtag=6):
+        txt_data=[]
+        def txt_insert(value,style=''):
+            txt_data.append((value,style))
+            return len(value)
+        def generate_txt_data(tagset_list):
+            length_max=max([len(' '.join(tagset)) for tagset in tagset_list])
+            for tagset in tagset_list:
+                rarity = Character.rarity(tagset)
+                if rarity:
+                    char_ids = Character.char_ids(tagset,'12345')
+                    length=0
+                    for tag in tagset:
+                        if length>0:
+                            length+=txt_insert(' ')
+                        length+=txt_insert(tag, Character.rarity(tag))
+                    length+=txt_insert(f'{' '*(length_max-length)}')
+                    length+=txt_insert(':',rarity)
+                    length+=txt_insert(' ')
+                    char_ids_rarity = Character.char_id_rarity(char_ids)
+                    for char_id,char_id_rarity in sorted(zip(char_ids,char_ids_rarity), key=lambda x: (-x[1],x[0])):
+                        name = Character._character_table()[char_id].get('name')
+                        if length+len(name) > 101:
+                            length=0
+                            length+=txt_insert(f'\n{' '*(length_max+2)}')
+                        length+=txt_insert(name, char_id_rarity)
+                        length+=txt_insert(' ')
+                    length+=txt_insert('\n')
+        tagset_list = Character.comb(taglist,maxtag,shorten=False)
+        generate_txt_data(sorted(tagset_list,key=lambda tagset: Character.rarity(tagset),reverse=True))
+        return txt_data
 
     @staticmethod
     def tagset_format(taglist=None,maxtag=6):
@@ -257,7 +309,6 @@ class Character():
                             txt_insert(' ')
                 if not (rarity==3 and not show and taglist==None):
                     txt_insert('\n')
-        
         tagset_dict = Character.comb_dict(taglist,maxtag)
         generate_txt_data(tagset_dict)
         return txt_data
@@ -302,8 +353,6 @@ def windows_image(img,app_title='Arknights',border=False,scaled=True):
     if scaled:
         # if use a high DPI display or >100% scaling size
         SetProcessDPIAware=windll.user32.SetProcessDPIAware()
-        # print(f'{SetProcessDPIAware=}')
-        pass
     if border:
         left, top, right, bot = win32gui.GetWindowRect(hwnd)
     else:
@@ -329,7 +378,6 @@ def windows_image(img,app_title='Arknights',border=False,scaled=True):
     win32gui.ReleaseDC(hwnd, hwndDC)
     if result == 1:
         im.save(img)
-    # windll.user32.SetProcessDpiAwareness(1.5)
 
 def resize(image, width=None, height=None):
     dim = None
@@ -361,14 +409,16 @@ class roi_data():
         with open(roi_data.file, "w", encoding="utf-8") as f:
             json.dump(data,f)
 
-def ocr_tag(img_anhrtags, setup=False):
-    # windows_image(img_anhrtags) # windows_image will change process dpi
+def win_tag(img_anhrtags, setup=False):
     from multiprocessing import Process
     p = Process(target=windows_image, args=(img_anhrtags,))
     p.start()
     p.join()
     return list(img_tag(img_anhrtags,setup=setup))
+
 def img_tag(img_anhrtags,setup=False):
+    if not os.path.isfile(img_anhrtags):
+        return iter(())
     img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
     img=resize(img,width=1000)
     height=int(img.shape[0])
@@ -412,9 +462,8 @@ def adb_tag(img_anhrtags,setup=False):
             img = adev.screencap(name1=img_anhrtags,open_img=False)
             if img:
                 return list(img_tag(img,setup=setup))
-    # adb usb
     try:
-        adev = shellcmd.AndroidDev()
+        adev = shellcmd.AndroidDev() # adb usb
         tags = _adb_tag(adev)
         if tags:
             return tags
@@ -425,10 +474,8 @@ def adb_tag(img_anhrtags,setup=False):
     adev_name=None
     for device,info in mdns.items():
         adev_name = info['device_ip']
-        # adev_name = device
         if adev_name:    
-            # adb wireless 
-            adev = shellcmd.AndroidDev(adev_name, adb_tcpip=False)
+            adev = shellcmd.AndroidDev(adev_name, adb_tcpip=False) # adb wireless 
             tags = _adb_tag(adev)
             if tags:
                 return tags
@@ -440,7 +487,6 @@ def ui_hr_tag(tags=[]):
             super().__init__(parent)
             self.checks_value = []
             self.checks={}
-            # max_c=0
             for r,checklist in enumerate(picks):
                 tag_frame = tk.Frame(self, bg='white')
                 for c,tag in enumerate(checklist):
@@ -449,18 +495,16 @@ def ui_hr_tag(tags=[]):
                     chk.grid(row=0, column=c)
                     self.checks[tag]=chk
                     self.checks_value.append(value)
-                # max_c = max_c if max_c>=len(checklist) else len(checklist)
                 tag_frame.grid(row=r, column=0, sticky="wens")
             btn_frame = tk.Frame(self, bg='white')
             btn_frame.grid(row=len(picks), column=0, sticky="wens")
-            # btn_frame.pack(fill="both", expand=True)
             img_anhrtags = 'tmp_anhrtags.png'
-            def ocr():
+            def ocr_win():
                 self.ui_clear()
-                tags=ocr_tag(img_anhrtags)
+                tags=win_tag(img_anhrtags)
                 self.select(tags)
                 self.real_ok(tags)
-            def adb():
+            def ocr_adb():
                 self.ui_clear()
                 tags=adb_tag(img_anhrtags)
                 self.select(tags)
@@ -486,14 +530,15 @@ def ui_hr_tag(tags=[]):
                     if not (getattr(on_click,'timer',None) and on_click.timer.is_alive()): #prevent call twice
                         on_click.timer = threading.Timer(0, real_on_click) 
                         on_click.timer.start()
-                btn = tk.Button(btn_frame,text=text,command=on_click)
+                # btn = tk.Button(btn_frame,text=text,command=on_click)
+                btn = ttk.Button(btn_frame,text=text,command=on_click)
                 real_on_click.btn=btn
                 btn.grid(row=len(picks), column=column_btn)
                 column_btn+=1
             create_btn('Ok',self.ok)
             create_btn('Clear',lambda:[self.select([]), self.ui_clear()])
-            create_btn('OCR-Google Play Games beta',ocr)
-            create_btn('OCR-adb',adb)
+            create_btn('OCR-win',ocr_win)
+            create_btn('OCR-adb',ocr_adb)
             create_btn('draw ROI',draw_roi)
             
             self.real_ok=None
@@ -560,6 +605,8 @@ def ui_hr_tag(tags=[]):
     def ok(tags):
         txt_data=[]
         txt_data+=Character.tagset_format(taglist=tags,maxtag=len(tags))
+        txt_data.append(('\n',''))
+        txt_data+=Character.char_ids_format(taglist=tags,maxtag=len(tags))
         txtm.configure(state='normal')
         txtm.delete("1.0",tk.END)
         txtm.insert('end', f"{tags}\n")
