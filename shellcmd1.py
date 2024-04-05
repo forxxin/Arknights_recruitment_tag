@@ -162,7 +162,7 @@ class AndroidDev():
             if ip:
                 cmds=f"""{adb} connect {self.device_id}"""
                 result =  self.runs(cmds,hidecmd=False, print_out=True, break_err=True)
-                self.wait_connect(10)
+                self.wait_connect(1)
                 return result
 
         if ip:
