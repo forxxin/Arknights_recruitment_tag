@@ -8,19 +8,22 @@ import tkinter as tk
 from tkinter import ttk
 from itertools import combinations
 import threading
-#1 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
-#2 pip install --upgrade pywin32 pytesseract opencv-python
-#3 set pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 try:
     import cv2 as cv
+    import numpy as np
     import pytesseract
     import win32gui
     import win32ui
     pytesseract.pytesseract.tesseract_cmd = os.path.abspath(r'../../Tesseract-OCR/tesseract.exe')
-except:
-    pass
+except Exception as e:
+    print(e)
+    print("""
+    #1 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
+    #2 pip install --upgrade pywin32 pytesseract opencv-python
+    #3 set pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
+    """)
     
 def subset(taglist,maxtag=6,self=0):
     for i in range(1,min(maxtag+1,len(taglist)+self)):
@@ -422,6 +425,45 @@ def img_tag(img_anhrtags,setup=False):
     img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
     img=resize(img,width=1000)
     height=int(img.shape[0])
+    print(f'\nimg_tag :\n{height=}')
+    th = cv.inRange(img, 49, 49)
+    th1 = cv.inRange(img, 114, 114)
+    th2 = cv.inRange(img, 141, 141)
+    th = cv.bitwise_or(th, th1)    
+    th = cv.bitwise_or(th, th2)    
+    contours, hier = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+    contours = sorted(contours, key=lambda contour:cv.boundingRect(contour)[1],reverse=True)
+    tags=[]
+    for idx,contour in enumerate(contours):
+        if len(tags)>=5:
+            return
+        area = cv.contourArea(contour)
+        x,y,w,h = cv.boundingRect(contour)
+        if area>2000:
+        # if w in range(98-1,111+2) and h in range(30-1,35+2):
+            print(x,y,w,h, end=' ')
+            mask = np.zeros_like(img)
+            cv.drawContours(mask, [contour], 0, 255, -1)
+            img_ = cv.bitwise_and(img, mask)
+            img_crop = img_[y:y+h, x:x+w]
+            tag_ocrs = pytesseract.image_to_string(img_crop)
+            taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
+            print(tag_ocrs.strip())
+            for tag_ocr in tag_ocrs.lower().split():
+                for taglow,tag in taglow_tag.items():
+                    if taglow in tag_ocr:
+                        if tag not in tags:
+                            tags.append(tag)
+                            yield tag
+                        break
+
+def img_tag1(img_anhrtags,setup=False):
+    if not os.path.isfile(img_anhrtags):
+        return iter(())
+    img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
+    img=resize(img,width=1000)
+    # cv.imwrite(f"anhrtags_1000.png",img)
+    height=int(img.shape[0])
     height_key=str(height)
     print(f'\nimg_tag:\n{height=}')
     def set_roi():
@@ -439,13 +481,13 @@ def img_tag(img_anhrtags,setup=False):
     if setup or (height_key not in roidata) or (height_key in roidata and height<1000 and not roidata[height_key]):
         roidata=set_roi()
     ROIs=roidata[height_key]
+    tags=[]
     for idx,rect in enumerate(ROIs):
         x,y,w,h=rect
         img_crop=img[y:y+h,x:x+w]
         tag_ocrs = pytesseract.image_to_string(img_crop)
         taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
         print(tag_ocrs.strip())
-        tags=[]
         for tag_ocr in tag_ocrs.lower().split():
             for taglow,tag in taglow_tag.items():
                 if taglow in tag_ocr:
@@ -467,8 +509,8 @@ def adb_tag(img_anhrtags,setup=False):
         tags = _adb_tag(adev)
         if tags:
             return tags
-    except:
-        pass
+    except Exception as e:
+        print(e)
     mdns = shellcmd.AndroidDev.adb_mdns()
     pprint.pprint(mdns)
     adev_name=None
@@ -509,12 +551,12 @@ def ui_hr_tag(tags=[]):
                 tags=adb_tag(img_anhrtags)
                 self.select(tags)
                 self.real_ok(tags)
-            def draw_roi():
-                self.ui_clear()
-                tags=list(img_tag(img_anhrtags,setup=True))
-                print(tags)
-                self.select(tags)
-                self.real_ok(tags)
+            # def draw_roi():
+                # self.ui_clear()
+                # tags=list(img_tag(img_anhrtags,setup=True))
+                # print(tags)
+                # self.select(tags)
+                # self.real_ok(tags)
             column_btn=0
             def create_btn(text,command):
                 nonlocal column_btn
@@ -523,14 +565,13 @@ def ui_hr_tag(tags=[]):
                     real_on_click.btn.update()
                     try:
                         command()
-                    except:
-                        pass
+                    except Exception as e:
+                        print(e)
                     real_on_click.btn.config(state=tk.NORMAL)
                 def on_click():
                     if not (getattr(on_click,'timer',None) and on_click.timer.is_alive()): #prevent call twice
                         on_click.timer = threading.Timer(0, real_on_click) 
                         on_click.timer.start()
-                # btn = tk.Button(btn_frame,text=text,command=on_click)
                 btn = ttk.Button(btn_frame,text=text,command=on_click)
                 real_on_click.btn=btn
                 btn.grid(row=len(picks), column=column_btn)
@@ -539,7 +580,7 @@ def ui_hr_tag(tags=[]):
             create_btn('Clear',lambda:[self.select([]), self.ui_clear()])
             create_btn('OCR-win',ocr_win)
             create_btn('OCR-adb',ocr_adb)
-            create_btn('draw ROI',draw_roi)
+            # create_btn('draw ROI',draw_roi)
             
             self.real_ok=None
         def ok(self):
