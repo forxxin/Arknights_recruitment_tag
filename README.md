@@ -1,4 +1,5 @@
-![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/4efeb2b3-1b97-40d0-95ef-0ba98893ffa1)
+![Uploading image.png…]()
+
 
 
 ## Install
