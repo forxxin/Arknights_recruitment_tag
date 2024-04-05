@@ -395,22 +395,22 @@ def resize(image, width=None, height=None):
         dim = (width, int(h * r))
     return cv.resize(image, dim, interpolation=cv.INTER_AREA)
 
-class roi_data():
-    file='roi.json'
-    @staticmethod
-    def load():
-        if not os.path.isfile(roi_data.file):
-            with open(roi_data.file, "a", encoding="utf-8"):
-                pass
-        with open(roi_data.file, "r", encoding="utf-8") as f:
-            try:
-                return json.load(f)
-            except:
-                return {}
-    @staticmethod
-    def save(data):
-        with open(roi_data.file, "w", encoding="utf-8") as f:
-            json.dump(data,f)
+# class roi_data():
+    # file='roi.json'
+    # @staticmethod
+    # def load():
+        # if not os.path.isfile(roi_data.file):
+            # with open(roi_data.file, "a", encoding="utf-8"):
+                # pass
+        # with open(roi_data.file, "r", encoding="utf-8") as f:
+            # try:
+                # return json.load(f)
+            # except:
+                # return {}
+    # @staticmethod
+    # def save(data):
+        # with open(roi_data.file, "w", encoding="utf-8") as f:
+            # json.dump(data,f)
 
 def win_tag(img_anhrtags, setup=False):
     from multiprocessing import Process
@@ -424,6 +424,7 @@ def img_tag(img_anhrtags,setup=False):
         return iter(())
     img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
     img=resize(img,width=1000)
+    # cv.imwrite(f"anhrtags_1000.png",img)
     height=int(img.shape[0])
     print(f'\nimg_tag :\n{height=}')
     th = cv.inRange(img, 49, 49)
@@ -457,44 +458,43 @@ def img_tag(img_anhrtags,setup=False):
                             yield tag
                         break
 
-def img_tag1(img_anhrtags,setup=False):
-    if not os.path.isfile(img_anhrtags):
-        return iter(())
-    img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
-    img=resize(img,width=1000)
-    # cv.imwrite(f"anhrtags_1000.png",img)
-    height=int(img.shape[0])
-    height_key=str(height)
-    print(f'\nimg_tag:\n{height=}')
-    def set_roi():
-        ROIs = cv.selectROIs('Select 5 tag area, ok=Space/Enter, finish=ESC', img, showCrosshair=False, fromCenter=False, printNotice=True)
-        cv.destroyAllWindows()
-        ROIs = [[int(x),int(y),int(w),int(h)] for x,y,w,h in ROIs]
-        print(f'{ROIs=}')
-        if ROIs:
-            roidata=roi_data().load()
-            roidata[height_key]=ROIs
-            roi_data().save(roidata)
-            return roidata
-        return {}
-    roidata=roi_data().load()
-    if setup or (height_key not in roidata) or (height_key in roidata and height<1000 and not roidata[height_key]):
-        roidata=set_roi()
-    ROIs=roidata[height_key]
-    tags=[]
-    for idx,rect in enumerate(ROIs):
-        x,y,w,h=rect
-        img_crop=img[y:y+h,x:x+w]
-        tag_ocrs = pytesseract.image_to_string(img_crop)
-        taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
-        print(tag_ocrs.strip())
-        for tag_ocr in tag_ocrs.lower().split():
-            for taglow,tag in taglow_tag.items():
-                if taglow in tag_ocr:
-                    if tag not in tags:
-                        yield tag
-                        tags.append(tag)
-                    break
+# def img_tag1(img_anhrtags,setup=False):
+    # if not os.path.isfile(img_anhrtags):
+        # return iter(())
+    # img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
+    # img=resize(img,width=1000)
+    # height=int(img.shape[0])
+    # height_key=str(height)
+    # print(f'\nimg_tag:\n{height=}')
+    # def set_roi():
+        # ROIs = cv.selectROIs('Select 5 tag area, ok=Space/Enter, finish=ESC', img, showCrosshair=False, fromCenter=False, printNotice=True)
+        # cv.destroyAllWindows()
+        # ROIs = [[int(x),int(y),int(w),int(h)] for x,y,w,h in ROIs]
+        # print(f'{ROIs=}')
+        # if ROIs:
+            # roidata=roi_data().load()
+            # roidata[height_key]=ROIs
+            # roi_data().save(roidata)
+            # return roidata
+        # return {}
+    # roidata=roi_data().load()
+    # if setup or (height_key not in roidata) or (height_key in roidata and height<1000 and not roidata[height_key]):
+        # roidata=set_roi()
+    # ROIs=roidata[height_key]
+    # tags=[]
+    # for idx,rect in enumerate(ROIs):
+        # x,y,w,h=rect
+        # img_crop=img[y:y+h,x:x+w]
+        # tag_ocrs = pytesseract.image_to_string(img_crop)
+        # taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
+        # print(tag_ocrs.strip())
+        # for tag_ocr in tag_ocrs.lower().split():
+            # for taglow,tag in taglow_tag.items():
+                # if taglow in tag_ocr:
+                    # if tag not in tags:
+                        # yield tag
+                        # tags.append(tag)
+                    # break
 
 def adb_tag(img_anhrtags,setup=False):
     import shellcmd1 as shellcmd
