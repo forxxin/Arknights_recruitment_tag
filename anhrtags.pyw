@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import ttk
 from itertools import combinations
 import threading
+import re
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 try:
@@ -448,6 +449,7 @@ def img_tag(img_anhrtags,setup=False):
             img_ = cv.bitwise_and(img, mask)
             img_crop = img_[y:y+h, x:x+w]
             tag_ocrs = pytesseract.image_to_string(img_crop)
+            tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS')
             taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
             print(tag_ocrs.strip())
             for tag_ocr in tag_ocrs.lower().split():
@@ -511,7 +513,7 @@ def adb_tag(img_anhrtags,setup=False):
             return tags
     except Exception as e:
         print(e)
-    mdns = shellcmd.AndroidDev.adb_mdns()
+    mdns = shellcmd.AndroidDev.adb_mdns(retry=2)
     pprint.pprint(mdns)
     adev_name=None
     for device,info in mdns.items():
