@@ -442,18 +442,18 @@ def img_tag(img_anhrtags,setup=False):
     else:
         ROIs=roidata[height_key]
         tags=[]
-        for rect in ROIs:
-            x,y,w,h=rect
+        for rect in ROIs
             img_crop=img[y:y+h,x:x+w]
             tag_ocrs = pytesseract.image_to_string(img_crop)
+            tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS')
             taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
             print(tag_ocrs.strip())
             for tag_ocr in tag_ocrs.lower().split():
                 for taglow,tag in taglow_tag.items():
                     if taglow in tag_ocr:
                         if tag not in tags:
-                            yield tag
                             tags.append(tag)
+                            yield tag
                         break
 
 def _img_tag(img_anhrtags,setup=False):
