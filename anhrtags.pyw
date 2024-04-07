@@ -435,7 +435,7 @@ def img_tag(img_anhrtags,setup=False):
         for tag,x,y,w,h in _img_tag(img_anhrtags,setup=setup):
             ROIs.append([x,y,w,h])
             tags.append(tag)
-        if len(ROIs)==5:
+        if len(ROIs)>=5:
             roidata[height_key]=ROIs
             roi_data().save(roidata)
         yield from tags
