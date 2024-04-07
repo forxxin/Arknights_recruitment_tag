@@ -396,22 +396,22 @@ def resize(image, width=None, height=None):
         dim = (width, int(h * r))
     return cv.resize(image, dim, interpolation=cv.INTER_AREA)
 
-# class roi_data():
-    # file='roi.json'
-    # @staticmethod
-    # def load():
-        # if not os.path.isfile(roi_data.file):
-            # with open(roi_data.file, "a", encoding="utf-8"):
-                # pass
-        # with open(roi_data.file, "r", encoding="utf-8") as f:
-            # try:
-                # return json.load(f)
-            # except:
-                # return {}
-    # @staticmethod
-    # def save(data):
-        # with open(roi_data.file, "w", encoding="utf-8") as f:
-            # json.dump(data,f)
+class roi_data():
+    file='roi.json'
+    @staticmethod
+    def load():
+        if not os.path.isfile(roi_data.file):
+            with open(roi_data.file, "a", encoding="utf-8"):
+                pass
+        with open(roi_data.file, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except:
+                return {}
+    @staticmethod
+    def save(data):
+        with open(roi_data.file, "w", encoding="utf-8") as f:
+            json.dump(data,f)
 
 def win_tag(img_anhrtags, setup=False):
     from multiprocessing import Process
@@ -425,6 +425,41 @@ def img_tag(img_anhrtags,setup=False):
         return iter(())
     img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
     img=resize(img,width=1000)
+    height=int(img.shape[0])
+    height_key=str(height)
+    print(f'\nimg_tag:\n{height=}')
+    roidata=roi_data().load()
+    if setup or (height_key not in roidata) or (height_key in roidata and height<1000 and not roidata[height_key]):
+        ROIs=[]
+        tags=[]
+        for tag,x,y,w,h in _img_tag(img_anhrtags,setup=setup):
+            ROIs.append([x,y,w,h])
+            tags.append(tag)
+            roidata[height_key]=ROIs
+            roi_data().save(roidata)
+        yield from tags
+    else:
+        ROIs=roidata[height_key]
+        tags=[]
+        for rect in ROIs:
+            x,y,w,h=rect
+            img_crop=img[y:y+h,x:x+w]
+            tag_ocrs = pytesseract.image_to_string(img_crop)
+            taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
+            print(tag_ocrs.strip())
+            for tag_ocr in tag_ocrs.lower().split():
+                for taglow,tag in taglow_tag.items():
+                    if taglow in tag_ocr:
+                        if tag not in tags:
+                            yield tag
+                            tags.append(tag)
+                        break
+
+def _img_tag(img_anhrtags,setup=False):
+    if not os.path.isfile(img_anhrtags):
+        return iter(())
+    img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
+    img=resize(img,width=1000)
     # cv.imwrite(f"anhrtags_1000.png",img)
     height=int(img.shape[0])
     print(f'\nimg_tag :\n{height=}')
@@ -434,31 +469,30 @@ def img_tag(img_anhrtags,setup=False):
     th = cv.bitwise_or(th, th1)    
     th = cv.bitwise_or(th, th2)    
     contours, hier = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-    contours = sorted(contours, key=lambda contour:cv.boundingRect(contour)[1],reverse=True)
+    contours_list = [(contour,cv.boundingRect(contour)) for contour in contours if cv.contourArea(contour)>1000]
     tags=[]
-    for idx,contour in enumerate(contours):
+    for contour,(x,y,w,h) in sorted(contours_list, key=lambda i:i[1][1],reverse=True):
         if len(tags)>=5:
             return
-        area = cv.contourArea(contour)
-        x,y,w,h = cv.boundingRect(contour)
-        if area>2000:
         # if w in range(98-1,111+2) and h in range(30-1,35+2):
-            print(x,y,w,h, end=' ')
-            mask = np.zeros_like(img)
-            cv.drawContours(mask, [contour], 0, 255, -1)
-            img_ = cv.bitwise_and(img, mask)
-            img_crop = img_[y:y+h, x:x+w]
-            tag_ocrs = pytesseract.image_to_string(img_crop)
-            tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS')
-            taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
-            print(tag_ocrs.strip())
-            for tag_ocr in tag_ocrs.lower().split():
-                for taglow,tag in taglow_tag.items():
-                    if taglow in tag_ocr:
-                        if tag not in tags:
-                            tags.append(tag)
-                            yield tag
-                        break
+        print(x,y,w,h,end=' ')
+        # mask = np.zeros_like(img)
+        # cv.drawContours(mask, [contour], 0, 255, -1)
+        # img_ = cv.bitwise_and(img, mask)
+        img_crop = img[y+1:y+h-1, x+1:x+w-1]
+        tag_ocrs = pytesseract.image_to_string(img_crop)
+        tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS')
+        taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
+        print(tag_ocrs.strip())
+        for tag_ocr in tag_ocrs.lower().split():
+            for taglow,tag in taglow_tag.items():
+                if taglow in tag_ocr:
+                    if tag not in tags:
+                        tags.append(tag)
+                        yield tag,x+1,y+1,w-2,h-2
+                        # yield tag,x,y,w,h
+                        # yield tag
+                    break
 
 # def img_tag1(img_anhrtags,setup=False):
     # if not os.path.isfile(img_anhrtags):
