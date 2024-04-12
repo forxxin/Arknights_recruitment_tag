@@ -6,8 +6,11 @@ import json
 import pprint
 import re
 import time
-import myprocess1 as myprocess
-
+try:
+    import mods.myprocess1 as myprocess
+except:
+    import myprocess1 as myprocess
+    
 adb = 'adb'
 _tmpdir='/data/local/tmp/'
 prjdir = os.path.dirname(os.path.abspath(__file__))+'/'
@@ -143,7 +146,7 @@ class AndroidDev():
             if result.returncode!=0:
                 if 'adb.exe: more than one device/emulator' in result.stderr:
                     pprint.pprint(devices)
-                raise Exception(result.stderr)
+                raise Exception([result.stderr,result.stdout])
             else:
                 self.device_id = next(iter(devices))
 
@@ -162,6 +165,8 @@ class AndroidDev():
             if ip:
                 cmds=f"""{adb} connect {self.device_id}"""
                 result =  self.runs(cmds,hidecmd=False, print_out=True, break_err=True)
+                if 'A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond. (10060)' in result.stdout:
+                    raise Exception([result.stderr,result.stdout])
                 self.wait_connect(1)
                 return result
 
