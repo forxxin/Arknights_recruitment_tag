@@ -70,10 +70,11 @@ def cost1(rarity=6):
     return result
 
 
-def plot():
+def plot(count=None):
     ys=[[]]*7
     datas=[[]]+[cost1(rarity) for rarity in range(1,7)]
-    count=max([len(data) for data in datas])
+    if not count:
+        count = max([len(data) for data in datas])
     xs = {rarity:['']*count for rarity in range(1,7)}
     for rarity in range(1,7):
         y1 = []
@@ -112,7 +113,7 @@ def plot():
             y1,y2=y
             ax.scatter(range(len(y1)),y1,s=1,color=anhrtags.colors.get(rarity,'black'))
             ax1.scatter(range(len(y2)),y2,s=1,color=anhrtags.colors.get(rarity,'black'))
-    def config(ax,fig):
+    def config(ax,fig,title):
         ax.set_xticks(range(len(x)))
         ax.set_xticklabels([str(item) for item in x])
         formatter = matplotlib.ticker.ScalarFormatter()
@@ -120,10 +121,10 @@ def plot():
         ax.yaxis.set_major_formatter(formatter)
         ax.set_ylim(ymin=0)
         fig.set_size_inches(8, 5)
-        ax.set_title("EXP")
+        ax.set_title(title)
         fig.tight_layout()
-    config(ax,fig)
-    config(ax1,fig1)
+    config(ax,fig,'EXP')
+    config(ax1,fig1,'LMD')
     plt.show()
 
 if __name__ == "__main__":
@@ -132,6 +133,7 @@ if __name__ == "__main__":
             for rarity in range(1,7):
                 print(*cost(rarity=rarity,level=level,evolve=evolve))
     plot()
+    # plot(count=40+55+1)
 
 '''
             EXP   LMD
