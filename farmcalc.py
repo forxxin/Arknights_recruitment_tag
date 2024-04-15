@@ -8,10 +8,13 @@ from datetime import datetime
 from functools import cache
 from dataclasses import dataclass
 import copy
-from scipy.optimize import linprog
-import numpy as np
-import anhrtags
 import re
+
+try:
+    from scipy.optimize import linprog
+    import numpy as np
+except Exception as e:
+    print(e)
 
 try:
     from shelve_cache import shelve_cache
@@ -22,6 +25,8 @@ try:
     from saveobj import save_json,load_json
 except:
     from mods.saveobj import save_json,load_json
+
+import anhrtags
 
 class Gv:
     server='US' #US CN JP KR
