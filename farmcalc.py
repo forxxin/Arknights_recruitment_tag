@@ -277,7 +277,7 @@ def res_linprog(nplist,args):
     print(f'{san=}')
     return res,san
 
-def calc():
+def calc(req={'30115':4}):
     '''
         x=[?]
         minimize: san(Stages+formulas,x)
@@ -290,7 +290,6 @@ def calc():
     xkey1=list(Data.formulas.keys())
     xkey=xkey0+xkey1
     
-    req={'30115':4}
     req=[Item(
             item=Data.items[itemId],
             dropType='NOT_DROP',
@@ -329,7 +328,7 @@ if __name__ == '__main__':
     
     # exit()
     
-    calc()
+    calc(req={'30115':4})
 
 
 '''
