@@ -278,12 +278,14 @@ def res_linprog(nplist,args):
     return res,san
 
 def calc():
+    '''
+        x=[?]
+        minimize: san(Stages+formulas,x)
+        subject to: -loot(stages+formulas,x) <= -req
+    '''
     def items2array(items):
         d = {item.item.id:item.n for item in items}
         return np.array([n if (n:=d.get(itemtype.id)) else 0 for itemtype in Data.items.values()])
-    # x=[]
-    # minimize: san(Stages+formulas,x) 
-    # subject to: -loot(stages+formulas,x) <= -req
     xkey0=list(Data.stages.keys())
     xkey1=list(Data.formulas.keys())
     xkey=xkey0+xkey1
