@@ -10,6 +10,7 @@ from itertools import combinations
 import threading
 import re
 import pprint
+import time
 
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
@@ -33,6 +34,35 @@ try:
     import mods.shellcmd1 as shellcmd
 except:
     import shellcmd1 as shellcmd
+
+class TimeCost():
+    '''
+        tc=TimeCost()
+        tc.end('func1')
+        tc.end('func2')
+    '''
+    use=True
+    def __init__(self,name=''):
+        if (not TimeCost.use) or (not self.__dict__.get('use',True)): return
+        self.setname(name)
+        self.start()
+    def start(self,name=''):
+        if (not TimeCost.use) or (not self.__dict__.get('use',True)): return
+        self.setname(name)
+        self.start_time = time.time()
+    def end(self,name=''):
+        if (not TimeCost.use) or (not self.__dict__.get('use',True)): return
+        self.setname(name)
+        self.end_time = time.time()
+        s = self.end_time - self.start_time
+        print(f"TimeCost {s:.3f}s {self.name}")
+        self.start_time = self.end_time
+    def setname(self,name):
+        if (not TimeCost.use) or (not self.__dict__.get('use',True)): return
+        if name:
+            self.name=name
+        else:
+            self.name=''
 
 def subset(taglist,maxtag=6,self=0):
     for i in range(1,min(maxtag+1,len(taglist)+self)):
@@ -393,42 +423,51 @@ class Character():
             save_result(txt_data)
         return txt_data
 
-def windows_image(img,app_title='Arknights',border=False,scaled=True):
+def windows_image(img_anhrtags,queue,app_title='Arknights',border=False,scaled=True):
     from ctypes import windll
     from PIL import Image
-    def remove_img(img):
-        if os.path.isfile(img):
-            os.remove(img)
-    remove_img(img)
-    hwnd = win32gui.FindWindow(None, app_title)
-    if scaled:
-        # if use a high DPI display or >100% scaling size
-        SetProcessDPIAware=windll.user32.SetProcessDPIAware()
-    if border:
-        left, top, right, bot = win32gui.GetWindowRect(hwnd)
-    else:
-        left, top, right, bot = win32gui.GetClientRect(hwnd)
-    w = right - left
-    h = bot - top
-    hwndDC = win32gui.GetWindowDC(hwnd)
-    mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
-    saveDC = mfcDC.CreateCompatibleDC()
-    saveBitMap = win32ui.CreateBitmap()
-    saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
-    saveDC.SelectObject(saveBitMap)
-    if border:
-        result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 2)
-    else:
-        result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
-    bmpinfo = saveBitMap.GetInfo()
-    bmpstr = saveBitMap.GetBitmapBits(True)
-    im = Image.frombuffer('RGB', (bmpinfo['bmWidth'], bmpinfo['bmHeight']), bmpstr, 'raw', 'BGRX', 0, 1)
-    win32gui.DeleteObject(saveBitMap.GetHandle())
-    saveDC.DeleteDC()
-    mfcDC.DeleteDC()
-    win32gui.ReleaseDC(hwnd, hwndDC)
-    if result == 1:
-        im.save(img)
+    try:
+        tc=TimeCost()
+        def remove_img(img_anhrtags):
+            if os.path.isfile(img_anhrtags):
+                os.remove(img_anhrtags)
+        remove_img(img_anhrtags)
+        hwnd = win32gui.FindWindow(None, app_title)
+        if scaled:
+            # if use a high DPI display or >100% scaling size
+            SetProcessDPIAware=windll.user32.SetProcessDPIAware()
+        if border:
+            left, top, right, bot = win32gui.GetWindowRect(hwnd)
+        else:
+            left, top, right, bot = win32gui.GetClientRect(hwnd)
+        w = right - left
+        h = bot - top
+        hwndDC = win32gui.GetWindowDC(hwnd)
+        mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
+        saveDC = mfcDC.CreateCompatibleDC()
+        saveBitMap = win32ui.CreateBitmap()
+        saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
+        saveDC.SelectObject(saveBitMap)
+        if border:
+            result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 2)
+        else:
+            result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
+        bmpinfo = saveBitMap.GetInfo()
+        bmpstr = saveBitMap.GetBitmapBits(True)
+        img = Image.frombuffer('RGB', (bmpinfo['bmWidth'], bmpinfo['bmHeight']), bmpstr, 'raw', 'BGRX', 0, 1)
+        win32gui.DeleteObject(saveBitMap.GetHandle())
+        saveDC.DeleteDC()
+        mfcDC.DeleteDC()
+        win32gui.ReleaseDC(hwnd, hwndDC)
+        if result == 1:
+            tc.end('in windows_image')
+            # img.save(img_anhrtags)
+            queue.put(img)
+        else:
+            queue.put(None)
+    except Exception as e:
+        print(e)
+        queue.put(None)
 
 def resize(image, width=None, height=None):
     dim = None
@@ -463,16 +502,29 @@ class roi_data():
             json.dump(data,f)
 
 def win_tag(img_anhrtags, setup=False):
-    from multiprocessing import Process
-    p = Process(target=windows_image, args=(img_anhrtags,))
+    from multiprocessing import Process,Queue
+    tc=TimeCost()
+    tc1=TimeCost()
+    queue = Queue()
+    p = Process(target=windows_image, args=(img_anhrtags,queue))
     p.start()
+    img=queue.get()
+    tc.end('windows_image')
+    ret = list(img_tag(img_anhrtags,setup=setup,img=img))
+    tc.end('img_tag')
     p.join()
-    return list(img_tag(img_anhrtags,setup=setup))
+    tc1.end('win_tag')
+    return ret
 
-def img_tag(img_anhrtags,setup=False):
-    if not os.path.isfile(img_anhrtags):
-        return iter(())
-    img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
+def img_tag(img_anhrtags,setup=False,img=None):
+    if img==None:
+        if not os.path.isfile(img_anhrtags):
+            return iter(())
+        img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
+    else:
+        from PIL import Image
+        if isinstance(img,Image.Image):
+            img = cv.cvtColor(np.array(img), cv.COLOR_RGB2BGR)
     img=resize(img,width=1000)
     height=int(img.shape[0])
     height_key=str(height)
@@ -700,9 +752,12 @@ def ui_hr_tag(tags=[]):
     root.grid_rowconfigure(1, weight=1)
     root.grid_columnconfigure(0, weight=1)
 
-    txt_frame.grid(row=0, sticky="wens")
-    check_frame.grid(row=1, sticky="wes")
-    txtm_frame.grid(row=2, sticky="wens")
+    # txt_frame.grid(row=0, sticky="wens")
+    # check_frame.grid(row=1)
+    # txtm_frame.grid(row=2, sticky="wens")
+    txt_frame.pack(fill="both",expand=False)
+    check_frame.pack(fill="both", expand=False)
+    txtm_frame.pack(fill="both", expand=True)
 
     txt = tk.Text(txt_frame, wrap='none',width=5,height=10)
     txtm = tk.Text(txtm_frame, wrap='none',width=5,height=10)
@@ -735,7 +790,7 @@ def ui_hr_tag(tags=[]):
         real_txt_insert(txtm, txt_data)
         text=txtm.get('1.0', 'end-1c').splitlines()
         width=len(max(text, key=len))
-        txtm.configure(height=len(text),width=max(width,txt_width))
+        txtm.configure(height=min(len(text),23),width=max(width,txt_width))
         txtm.configure(state='disabled')
     if tags:
         check_frame.select(tags)
