@@ -28,6 +28,9 @@ except:
 
 import anhrtags
 
+app_path = os.path.dirname(__file__)
+os.chdir(app_path)
+
 class Gv:
     server='US' #US CN JP KR
     lang='en'
@@ -75,7 +78,7 @@ class Stage:
     name:str
     id:str
     san:int
-    outs:list
+    outs:list #list of Item
     danger_level:float
     def __str__(self):
         return f'{self.name}|{self.dangerLevel}: {self.san}San = {str_itemlist(self.outs)}'
@@ -113,9 +116,9 @@ class Formula:
     name:str
     id:str
     goldCost:int
-    ins:list
-    out:list
-    out_ex:list
+    ins:list #list of Item
+    out:list #list of Item
+    out_ex:list #list of Item
     def __str__(self):
         return f'{self.goldCost}LMD + {str_itemlist(self.ins)} = {str_itemlist(self.out+self.out_ex)}'
 
@@ -174,30 +177,30 @@ def prep_items(items):
             # print(obj)
 
 def prep_stages(stages):
-    _stages = anhrtags.GData.json_table('stage').get('stages',{})
+    stageinfos = anhrtags.GData.json_table('stage').get('stages',{})
+    def dangerLevel(stageinfo):
+        if (m:=re.match(r'Elite *(\d+) *Lv. *(\d+)',stageinfo.get('dangerLevel') or '')):
+            return float(f'{m.group(1)}.{m.group(2)}')
+        return 0
     for stage in stages:
         if (dropInfos:=stage.get('dropInfos')):
             if stage.get('existence').get(Gv.server).get('exist')==True:
                 stageId=stage.get('stageId')
-                stageinfo=_stages.get(stageId,{})
-                if (m:=re.match(r'Elite *(\d+) *Lv. *(\d+)',stageinfo.get('dangerLevel') or '')):
-                    dangerLevel=float(f'{m.group(1)}.{m.group(2)}')
-                else:
-                    dangerLevel=0
+                stageinfo=stageinfos.get(stageId,{})
                 obj=Stage(
                     name=f'stage:{stage.get('code_i18n').get(Gv.lang)}',
                     id=stageId,
                     san=stage.get('apCost'),
                     outs=[],
-                    danger_level=dangerLevel,
+                    danger_level=dangerLevel(stageinfo),
                 )
                 for dropInfo in dropInfos:
                     if (itemId:=dropInfo.get('itemId')):
                         obj.outs.append(Item(
-                            item=Data.items[itemId],
-                            dropType=dropInfo.get('dropType'),
-                            n=0,
-                        ))
+                                            item=Data.items[itemId],
+                                            dropType=dropInfo.get('dropType'),
+                                            n=0,
+                                        ))
                 Data.stages[stageId]=obj
                 # print(obj)
 
@@ -252,10 +255,10 @@ def prep_formula(formulas):
             weight_all+=weight
             n=count*weight/totalWeight
             obj.out_ex.append(Item(
-                            item=Data.items[itemId_out],
-                            dropType='NOT_DROP',
-                            n=n,
-                        ))
+                                item=Data.items[itemId_out],
+                                dropType='NOT_DROP',
+                                n=n,
+                            ))
         Data.formulas[itemId]=obj
         assert totalWeight==weight_all
 
@@ -292,14 +295,16 @@ def calc():
             n=n,
         ) for itemId,n in req.items()]
     ex=0.018
-    c = np.array([stage.san for stage in Data.stages.values()] + [0 for formula in Data.formulas.values()])
-    A_ub = -np.array([items2array(stage.outs) for stage in Data.stages.values()]+[(items2array(formula.out)+items2array(formula.out_ex)*ex-items2array(formula.ins)) for formula in Data.formulas.values()]).T
-    b_ub=-items2array(req)
     # integrality=[1]*len(xkey)
     # integrality=3
     integrality=None
     args={
-        'c':c, 'A_ub':A_ub, 'b_ub':b_ub, 
+        'c':np.array([stage.san for stage in Data.stages.values()] + [0 for formula in Data.formulas.values()]),
+        'A_ub':-np.array(
+            [items2array(stage.outs) for stage in Data.stages.values()] + 
+            [(items2array(formula.out)+items2array(formula.out_ex)*ex-items2array(formula.ins)) for formula in Data.formulas.values()]
+        ).T,
+        'b_ub':-items2array(req), 
         'integrality':integrality, #1,3: very slow
         'A_eq':None, 'b_eq':None, 'bounds':(0, None), 'method':'highs', 'callback':None, 'options':None, 'x0':None #default
         }
