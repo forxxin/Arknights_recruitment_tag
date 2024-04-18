@@ -363,6 +363,7 @@ def calc(req,test=False):
         minimize: san(Stages+formulas,x)
         subject to: -loot(stages+formulas,x) <= -req
     '''
+    ex=0.018
     def to_array(obj):
         exp=0
         gold=0
@@ -384,6 +385,7 @@ def calc(req,test=False):
             gold+=Data.stagecode_gold.get(obj.code,0)
             return np.append(item_array(obj.outs),[exp,gold])
         elif isinstance(obj,Formula):
+            gold+=-obj.goldCost
             return np.append(item_array(obj.out)+item_array(obj.out_ex)*ex-item_array(obj.ins),[exp,gold])
         elif isinstance(obj,Req):
             return np.append(item_array(obj.reqs),[obj.exp,obj.gold])
@@ -399,7 +401,6 @@ def calc(req,test=False):
             n=n,
         ) for itemId,n in req.items() if Data.items.get(itemId)],
     )
-    ex=0.018
     # integrality=[1]*len(xkey)
     # integrality=3
     integrality=None
@@ -422,13 +423,13 @@ def print_items():
     print(*[f"""{' '*8}'{i.id}':100,{' '*(28-len(i.id))}#{i.name:<37}#{i.rarity} #{i.itemType}:{i.groupID}""" for i in items],sep='\n')
     
 req={
-    'gold':180000,
-    'exp':100000,
+    'gold':0,
+    'exp':0,
     '30125':0,                       #Bipolar Nanoflake                    #4 #ARKPLANNER:
     '30145':0,                       #Crystalline Electronic Unit          #4 #ARKPLANNER:
     '30135':0,                       #D32 Steel                            #4 #ARKPLANNER:
     '30155':0,                       #Nucleic Crystal Sinter               #4 #ARKPLANNER:
-    '30115':4,                       #Polymerization Preparation           #4 #ARKPLANNER:
+    '30115':0,                       #Polymerization Preparation           #4 #ARKPLANNER:
     '2001':0,                        #Drill Battle Record                  #1 #CARD_EXP:exp
     '2002':0,                        #Frontline Battle Record              #2 #CARD_EXP:exp
     '2003':0,                        #Tactical Battle Record               #3 #CARD_EXP:exp
@@ -460,7 +461,7 @@ req={
     '31034':0,                       #Crystalline Circuit                  #3 #MATERIAL:crystal
     '31053':0,                       #Compound Cutting Fluid               #2 #MATERIAL:cutting_fluid
     '31054':0,                       #Cutting Fluid Solution               #3 #MATERIAL:cutting_fluid
-    '30061':0,                       #Damaged Device                       #0 #MATERIAL:device
+    '30061':1,                       #Damaged Device                       #0 #MATERIAL:device
     '30062':0,                       #Device                               #1 #MATERIAL:device
     '30063':0,                       #Integrated Device                    #2 #MATERIAL:device
     '30064':0,                       #Optimized Device                     #3 #MATERIAL:device
@@ -475,7 +476,7 @@ req={
     '30051':0,                       #Diketon                              #0 #MATERIAL:keton
     '30052':0,                       #Polyketon                            #1 #MATERIAL:keton
     '30053':0,                       #Aketon                               #2 #MATERIAL:keton
-    '30054':5,                       #Keton Colloid                        #3 #MATERIAL:keton 
+    '30054':0,                       #Keton Colloid                        #3 #MATERIAL:keton 
     # https://raw.githubusercontent.com/Aceship/Arknight-Images/main/material/bg/item-4.png
     # https://raw.githubusercontent.com/Aceship/Arknight-Images/main/items/MTL_SL_KETONE4.png
     '30073':0,                       #Loxic Kohl                           #2 #MATERIAL:kohl
@@ -509,7 +510,7 @@ req={
 def best_stages():
     s4=[]
     s5=[]
-    count=1000000
+    count=1234321
     for itemid,v in req.items():
         lp,args,req_=calc({itemid:count},test=True)
         if lp.success:
@@ -520,9 +521,12 @@ def best_stages():
                 if stage.id not in s4:
                     s4.append(stage.id)
                     s5.append(stage.id.replace('_perm',''))
-                beststage.append(stage)
+                if stage.code!='CE-6':
+                    beststage.append(stage)
             if (item:=Data.items.get(itemid)):
                 item.beststage=beststage
+        else:
+            print(itemid,lp)
     if s4:
         return s4,s5
 
