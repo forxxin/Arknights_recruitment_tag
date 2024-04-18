@@ -29,6 +29,10 @@ except Exception as e:
     #2 pip install --upgrade pywin32 pytesseract opencv-python
     #3 set pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
     """)
+try:
+    import PyQt6.QtWidgets
+except Exception as e:
+    print(e)
 
 try:
     import mods.shellcmd1 as shellcmd
@@ -73,9 +77,16 @@ class GData():
     @staticmethod
     def download(file,url):
         if not os.path.isfile(file):
-            os.makedirs('./gdata/', exist_ok=True)
+            os.makedirs(os.path.dirname(file), exist_ok=True)
             urllib.request.urlretrieve(url, file)
-    
+
+    @staticmethod
+    @cache
+    def img(name,url):
+        file = f'./gdata/img/{name}'
+        GData.download(file,url)
+        return file
+
     @staticmethod
     @cache
     def json_tl(name):
@@ -90,7 +101,7 @@ class GData():
 
     @staticmethod
     @cache
-    def json_table(name, lang='en_US'):
+    def json_table(name, lang='en_US'): #story_review
         url = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/gamedata/{lang}/gamedata/excel/{name}_table.json'
         file = f'./gdata/{name}_table_{lang}.json'
         GData.download(file,url)
@@ -577,7 +588,7 @@ def _img_tag(img,setup=False):
 
 def ocr_img(img,x,y,w,h):
     img_crop=img[y:y+h,x:x+w]
-    tag_ocrs = pytesseract.image_to_string(img_crop)
+    tag_ocrs = pytesseract.image_to_string(img_crop, config='''D:/CS/PythonCodes/Arknights/tessdata/bazaar''')
     tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS')
     taglow_tag = {tag.lower():tag for tag in Character.all_tags_sorted()}
     print(tag_ocrs.strip())
@@ -799,6 +810,186 @@ def ui_hr_tag(tags=[]):
     check_frame.ui_clear=clear
     root.mainloop()
 
+def ui_hr_tag1(tags=[]):
+    # class Checkbar(tk.Frame):
+    class Checkbar(PyQt6.QtWidgets.QWidget):
+        def __init__(self, parent=None, picks=[]):
+            super().__init__(parent)
+            self.checks_value = []
+            self.checks={}
+            return
+            for r,checklist in enumerate(picks):
+                tag_frame = tk.Frame(self, bg='white')
+                for c,tag in enumerate(checklist):
+                    value = tk.StringVar(value="")
+                    chk = tk.Checkbutton(tag_frame, text=tag, variable=value, onvalue=tag, offvalue="", indicatoron=False,foreground=colors.get(Character.rarity(tag),'black'))
+                    chk.grid(row=0, column=c)
+                    self.checks[tag]=chk
+                    self.checks_value.append(value)
+                tag_frame.grid(row=r, column=0, sticky="wens")
+            btn_frame = tk.Frame(self, bg='white')
+            btn_frame.grid(row=len(picks), column=0, sticky="wens")
+            os.makedirs('./tmp/', exist_ok=True)
+            img_anhrtags = './tmp/tmp_anhrtags.png'
+            def ocr_win():
+                self.ui_clear()
+                tags=win_tag(img_anhrtags)
+                self.select(tags)
+                self.real_ok(tags)
+            def ocr_adb():
+                self.ui_clear()
+                tags=adb_tag(img_anhrtags)
+                self.select(tags)
+                self.real_ok(tags)
+            def adb_kill_server():
+                adb_kill()
+            # def draw_roi():
+                # self.ui_clear()
+                # tags=list(img_tag(img_anhrtags,setup=True))
+                # print(tags)
+                # self.select(tags)
+                # self.real_ok(tags)
+            column_btn=0
+            def create_btn(text,command):
+                nonlocal column_btn
+                def real_on_click():
+                    real_on_click.btn.config(state=tk.DISABLED) #prevent call twice
+                    real_on_click.btn.update()
+                    try:
+                        command()
+                    except Exception as e:
+                        print(e)
+                    real_on_click.btn.config(state=tk.NORMAL)
+                def on_click():
+                    if not (getattr(on_click,'timer',None) and on_click.timer.is_alive()): #prevent call twice
+                        on_click.timer = threading.Timer(0, real_on_click)
+                        on_click.timer.start()
+                btn = ttk.Button(btn_frame,text=text,command=on_click)
+                real_on_click.btn=btn
+                btn.grid(row=len(picks), column=column_btn)
+                column_btn+=1
+            create_btn('Ok',self.ok)
+            create_btn('Clear',lambda:[self.select([]), self.ui_clear()])
+            create_btn('OCR-win',ocr_win)
+            create_btn('OCR-adb',ocr_adb)
+            create_btn('adb kill-server',adb_kill_server)
+            # create_btn('draw ROI',draw_roi)
+
+            self.real_ok=None
+        def ok(self):
+            if getattr(self,'real_ok',None):
+                self.real_ok(self.check())
+        def check(self):
+            return [value.get() for value in self.checks_value if value.get()]
+        def select(self,tags):
+            for tag,chk in self.checks.items():
+                if tag in tags:
+                    chk.select()
+                else:
+                    chk.deselect()
+    def txt_color(txt):
+        for i in range(6,0,-1):
+            txt.tag_config(str(i), background=colors.get(i,'white'), foreground="black")
+            txt.tag_config(i, background=colors.get(i,'white'), foreground="black")
+        txt.tag_config('', background="white", foreground="black")
+    def real_txt_insert(txt, txt_data):
+        for value,style in txt_data:
+            txt.insert('end',value,style)
+
+    class MainWindow(PyQt6.QtWidgets.QMainWindow):
+        def __init__(self):
+            super(MainWindow, self).__init__()
+            self.setWindowTitle("Arknights Recruitment Tag")
+
+            self.scroll = PyQt6.QtWidgets.QScrollArea()
+            self.scroll.setVerticalScrollBarPolicy(PyQt6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+            self.scroll.setHorizontalScrollBarPolicy(PyQt6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            self.scroll.setWidgetResizable(True)
+            
+            self.w = PyQt6.QtWidgets.QWidget(self)
+
+            self.w_layout = PyQt6.QtWidgets.QVBoxLayout()
+            
+            self.setCentralWidget(self.scroll)
+            self.scroll.setWidget(self.w)
+            self.w.setLayout(self.w_layout)
+            
+            txt_frame = PyQt6.QtWidgets.QWidget()
+            txtm_frame = PyQt6.QtWidgets.QWidget()
+            # txt_frame = tk.Frame(root, bg='white', pady=3)
+            # txtm_frame = tk.Frame(root, bg='white', pady=3)
+
+            check_frame=Checkbar(self,[Character.profession(),Character.position(),Character.tagList()])
+            print(Character.profession())
+            print(Character.position())
+            print(Character.tagList())
+
+            self.w_layout.addWidget(txt_frame)
+            self.w_layout.addWidget(check_frame)
+            self.w_layout.addWidget(txtm_frame)
+
+            txt = PyQt6.QtWidgets.QTextEdit(txt_frame)
+            txtm = PyQt6.QtWidgets.QTextEdit(txtm_frame)
+            # txt.pack(fill="both", expand=True)
+            # txtm.pack(fill="both", expand=True)
+
+            # txt_color(txt)
+            # txt_color(txtm)
+
+            # txt_data = Character.hr_all()
+            # txt.configure(state='normal')
+            # real_txt_insert(txt, txt_data)
+            # text=txt.get('1.0', 'end-1c').splitlines()
+            # txt_width=len(max(text, key=len))
+            # txt.configure(height=len(text),width=txt_width)
+            # txt.configure(state='disabled')
+            # def clear():
+                # txtm.configure(state='normal')
+                # txtm.delete("1.0",tk.END)
+                # txtm.configure(state='disabled')
+                # txtm.update()
+            # def ok(tags):
+                # txt_data=[]
+                # txt_data+=Character.tagset_format(taglist=tags,maxtag=len(tags))
+                # txt_data.append(('\n',''))
+                # txt_data+=Character.char_ids_format(taglist=tags,maxtag=len(tags))
+                # txtm.configure(state='normal')
+                # txtm.delete("1.0",tk.END)
+                # txtm.insert('end', f"{tags}\n")
+                # real_txt_insert(txtm, txt_data)
+                # text=txtm.get('1.0', 'end-1c').splitlines()
+                # width=len(max(text, key=len))
+                # txtm.configure(height=min(len(text),23),width=max(width,txt_width))
+                # txtm.configure(state='disabled')
+            # if tags:
+                # check_frame.select(tags)
+                # ok(tags)
+            # check_frame.real_ok=ok
+            # check_frame.ui_clear=clear
+            # root.mainloop()
+    
+    app = PyQt6.QtWidgets.QApplication(sys.argv)
+    root = MainWindow()
+    root.show()
+    ret = app.exec()
+
+# def save_tessdata():
+    # bazaar='./tessdata/bazaar'
+    # userwords='./tessdata/eng.userwords'
+    # os.makedirs('./tessdata/', exist_ok=True)
+    # if not os.path.isfile(bazaar):
+        # with open(bazaar, "w", encoding="utf-8") as f:
+            # f.write('''load_system_dawg     F
+# load_freq_dawg       F
+# user_words_suffix    userwords
+# user_patterns_suffix F
+# ''')
+    # if not os.path.isfile(userwords):
+        # with open(userwords, "w", encoding="utf-8") as f:
+            # f.write('\n'.join(Character.all_tags()))
+
 if __name__ == "__main__":
+    # save_tessdata()
     tags=['Caster', 'Defense']
     ui_hr_tag(tags)
+    # ui_hr_tag1(tags)
