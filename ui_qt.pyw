@@ -22,7 +22,7 @@ except:
 class UiRoot(QMainWindow):
     def __init__(self):
         super(UiRoot, self).__init__()
-        self.setWindowTitle("My App")
+        self.setWindowTitle("Arknights Best Stages")
         self.scroll = PyQt6.QtWidgets.QScrollArea()
         self.scroll.setVerticalScrollBarPolicy(PyQt6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(PyQt6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
