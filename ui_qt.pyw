@@ -22,7 +22,7 @@ except:
 class UiRoot(QMainWindow):
     def __init__(self):
         super(UiRoot, self).__init__()
-        self.setWindowTitle("Arknights Best Stages")
+        self.setWindowTitle(f"Arknights Best Stages [minimize_stage_key={farmcalc.Data.minimize_stage_key}, server={farmcalc.Gv.server}]"  )
         self.scroll = PyQt6.QtWidgets.QScrollArea()
         self.scroll.setVerticalScrollBarPolicy(PyQt6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(PyQt6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -231,7 +231,7 @@ def main():
     
     root.load_pos()
     view.load_pos()
-    
+
     root.show()
     ret = app.exec()
     sys.exit()
