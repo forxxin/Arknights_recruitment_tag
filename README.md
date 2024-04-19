@@ -1,5 +1,7 @@
-![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/d48e148c-3a14-491c-ae74-3eed0b0e807a)
-![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/bf5a0ba2-b996-4c69-bfc7-7d3bb2da287c)
+![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/6acd06b9-1a43-43e7-b0dc-63cea28f72b5)
+
+![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/f06f09ba-6a4a-4731-bcfc-70301a883103)
+
 
 
 ## Install
