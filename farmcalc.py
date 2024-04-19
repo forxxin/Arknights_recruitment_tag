@@ -73,6 +73,7 @@ class Stage:
     id:str
     code:str
     san:int
+    minClearTime:int
     normal_drop:list #list of itemId
     outs:list #list of Item
     danger_level:float
@@ -253,6 +254,7 @@ def prep_stages(stages):
                 id=stageId,
                 code=stage.get('code'),
                 san=stage.get('apCost'),
+                minClearTime=int(stage.get('minClearTime') or 999999999),
                 normal_drop=normal_drop,
                 outs=[],
                 danger_level=dangerLevel(stageinfo),
@@ -341,10 +343,14 @@ def print_lp(lp,args,req_,p=True):
         if p: print(f'    {obj.name}:{n:.1f}')
     return res_stage,res_formula,san
 
-def calc(req,test=False):
+def calc(req,test=False,minimize_stage_key='san'):
     '''
         x=[?]
         minimize: san(Stages+formulas,x)
+        subject to: -loot(stages+formulas,x) <= -req
+        
+        x=[?]
+        minimize: minClearTime(Stages+formulas,x)
         subject to: -loot(stages+formulas,x) <= -req
     '''
     ex=0.18
@@ -389,7 +395,7 @@ def calc(req,test=False):
     # integrality=3
     integrality=None
     args={
-        'c':np.array([stage.san for stage in Data.stages.values()] + [0 for formula in Data.formulas.values()]),
+        'c':np.array([getattr(stage,minimize_stage_key) for stage in Data.stages.values()] + [0 for formula in Data.formulas.values()]),
         'A_ub':-np.array(
             [to_array(stage) for stage in Data.stages.values()] + 
             [to_array(formula) for formula in Data.formulas.values()]
@@ -489,12 +495,12 @@ req={
 }
 
 @cache
-def best_stages():
+def best_stages(minimize_stage_key='san'):
     s4=[]
     s5=[]
     count=1234321
     for itemid,v in req.items():
-        lp,args,req_=calc({itemid:count},test=True)
+        lp,args,req_=calc({itemid:count},test=True,minimize_stage_key=minimize_stage_key)
         if lp.success:
             res_stage,res_formula,san=print_lp(lp,args,req_,p=False)
             beststage=[]
@@ -513,7 +519,7 @@ def best_stages():
         return s4,s5
 
 loaded=False
-def init():
+def init(minimize_stage_key='san'):
     global loaded
     if not loaded:
         loaded=True
@@ -522,14 +528,16 @@ def init():
         prep_stages(stages)
         prep_stageitems(stageitems)
         prep_formula(formulas)
-        best_stages()
+        best_stages(minimize_stage_key=minimize_stage_key)
     
-init()
+init(minimize_stage_key='minClearTime')
+# init(minimize_stage_key='san')
 if __name__ == '__main__':
     # print(*[str(i) for i in Data.items.values()],sep='\n')
     # print(*[str(i) for i in Data.stages.values()],sep='\n')
     # print(*[str(i) for i in Data.formulas.values()],sep='\n')
-    res=calc(req)
+    res=calc(req,minimize_stage_key='minClearTime')
+    # res=calc(req,minimize_stage_key='san')
     print_lp(*res)
 
 '''
