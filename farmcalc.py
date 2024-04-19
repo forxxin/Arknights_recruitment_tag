@@ -33,6 +33,7 @@ os.chdir(app_path)
 
 class Gv:
     server='US' #US CN JP KR
+    # server='CN' #US CN JP KR
     lang='en'
     now = datetime.now().timestamp()*1000
     
@@ -51,13 +52,13 @@ def get_json(key,update=False):
         return _get_json(key)
 
 def penguin_stats(update=False):
-    def _penguin_stats(name,query):
+    def _penguin_stats(name,query,server=''):
         data=get_json(query,update)
-        file=f'./tmp/{name}.json'
+        file=f'./tmp/{name}{server}.json'
         if (not os.path.isfile(file)) or update:
             save_json(file,data)
         return data
-    stages = _penguin_stats('stages',f'stages?server={Gv.server}')
+    stages = _penguin_stats('stages',f'stages?server={Gv.server}',Gv.server)
     items = _penguin_stats('items','items')
     stageitems = _penguin_stats('stageitems','result/matrix?show_closed_zone=false')
     stageitems_all = _penguin_stats('stageitems_all','result/matrix?show_closed_zone=true')
@@ -133,6 +134,7 @@ class Req:
         return f'Req: {' + '.join([i for i in [str_gold,str_exp,str_itemlist(self.reqs)] if i])}'
     
 class Data:
+    minimize_stage_key=''
     items={}
     stages={}
     formulas={}
@@ -243,24 +245,22 @@ def prep_stages(stages):
         return 0
     for stage in stages:
         dropInfos=stage.get('dropInfos',{})
-        # if ( (dropInfos:=stage.get('dropInfos')) 
-        # if ( stage.get('existence').get(Gv.server).get('exist')==True 
-        if (  ((stageId:=stage.get('stageId')) not in Data.except_stageId)
-            ):
-            normal_drop = [dropInfo.get('itemId') for dropInfo in dropInfos if dropInfo.get('dropType')=='NORMAL_DROP' and dropInfo.get('itemId')]
-            stageinfo=stageinfos.get(stageId,{})
-            obj=Stage(
-                name=f'stage:{stage.get('code_i18n').get(Gv.lang)}',
-                id=stageId,
-                code=stage.get('code'),
-                san=stage.get('apCost'),
-                minClearTime=int(stage.get('minClearTime') or 999999999),
-                normal_drop=normal_drop,
-                outs=[],
-                danger_level=dangerLevel(stageinfo),
-            )
-            itemIds=set()
-            Data.stages[stageId]=obj
+        if stage.get('existence').get(Gv.server).get('exist')==True:
+            if (stageId:=stage.get('stageId')) not in Data.except_stageId:
+                normal_drop = [dropInfo.get('itemId') for dropInfo in dropInfos if dropInfo.get('dropType')=='NORMAL_DROP' and dropInfo.get('itemId')]
+                stageinfo=stageinfos.get(stageId,{})
+                obj=Stage(
+                    name=f'stage:{stage.get('code_i18n').get(Gv.lang)}',
+                    id=stageId,
+                    code=stage.get('code'),
+                    san=stage.get('apCost'),
+                    minClearTime=int(stage.get('minClearTime') or 999999999),
+                    normal_drop=normal_drop,
+                    outs=[],
+                    danger_level=dangerLevel(stageinfo),
+                )
+                itemIds=set()
+                Data.stages[stageId]=obj
 
 def prep_stageitems(stageitems):
     for stageitem in stageitems.get('matrix',{}):
@@ -516,7 +516,7 @@ def best_stages(minimize_stage_key='san'):
         else:
             print(itemid,lp)
     if s4:
-        return s4,s5
+        return s4,s5,minimize_stage_key
 
 loaded=False
 def init(minimize_stage_key='san'):
@@ -528,10 +528,11 @@ def init(minimize_stage_key='san'):
         prep_stages(stages)
         prep_stageitems(stageitems)
         prep_formula(formulas)
-        best_stages(minimize_stage_key=minimize_stage_key)
-    
-# init(minimize_stage_key='minClearTime')
+        s4,s5,minimize_stage_key = best_stages(minimize_stage_key=minimize_stage_key)
+        Data.minimize_stage_key=minimize_stage_key
+
 init(minimize_stage_key='san')
+# init(minimize_stage_key='minClearTime')
 if __name__ == '__main__':
     # print(*[str(i) for i in Data.items.values()],sep='\n')
     # print(*[str(i) for i in Data.stages.values()],sep='\n')
