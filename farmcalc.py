@@ -530,14 +530,14 @@ def init(minimize_stage_key='san'):
         prep_formula(formulas)
         best_stages(minimize_stage_key=minimize_stage_key)
     
-init(minimize_stage_key='minClearTime')
-# init(minimize_stage_key='san')
+# init(minimize_stage_key='minClearTime')
+init(minimize_stage_key='san')
 if __name__ == '__main__':
     # print(*[str(i) for i in Data.items.values()],sep='\n')
     # print(*[str(i) for i in Data.stages.values()],sep='\n')
     # print(*[str(i) for i in Data.formulas.values()],sep='\n')
-    res=calc(req,minimize_stage_key='minClearTime')
-    # res=calc(req,minimize_stage_key='san')
+    # res=calc(req,minimize_stage_key='minClearTime')
+    res=calc(req,minimize_stage_key='san')
     print_lp(*res)
 
 '''
