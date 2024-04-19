@@ -62,13 +62,6 @@ def penguin_stats(update=False):
     stageitems = _penguin_stats('stageitems','result/matrix?show_closed_zone=false')
     stageitems_all = _penguin_stats('stageitems_all','result/matrix?show_closed_zone=true')
     formulas = _penguin_stats('formulas','formula')
-    # def check():
-        # for item in stageitems_all.get('matrix'):
-            # if item not in stageitems.get('matrix'):
-                # print(item)
-                # return False
-        # return True
-    # assert check()
     return stages,items,stageitems,formulas
 
 def str_itemlist(itemlist):
@@ -248,9 +241,10 @@ def prep_stages(stages):
             return float(f'{m.group(1)}.{m.group(2)}')
         return 0
     for stage in stages:
-        if ((dropInfos:=stage.get('dropInfos')) 
-            and stage.get('existence').get(Gv.server).get('exist')==True 
-            and ((stageId:=stage.get('stageId')) not in Data.except_stageId)
+        dropInfos=stage.get('dropInfos',{})
+        # if ( (dropInfos:=stage.get('dropInfos')) 
+        # if ( stage.get('existence').get(Gv.server).get('exist')==True 
+        if (  ((stageId:=stage.get('stageId')) not in Data.except_stageId)
             ):
             normal_drop = [dropInfo.get('itemId') for dropInfo in dropInfos if dropInfo.get('dropType')=='NORMAL_DROP' and dropInfo.get('itemId')]
             stageinfo=stageinfos.get(stageId,{})
@@ -264,16 +258,7 @@ def prep_stages(stages):
                 danger_level=dangerLevel(stageinfo),
             )
             itemIds=set()
-            for dropInfo in dropInfos:
-                if (itemId:=dropInfo.get('itemId')):
-                    if itemId not in itemIds:
-                        itemIds.add(itemId)
-                        obj.outs.append(Item(
-                                            item=Data.items[itemId],
-                                            n=0,
-                                        ))
             Data.stages[stageId]=obj
-            # print(obj)
 
 def prep_stageitems(stageitems):
     for stageitem in stageitems.get('matrix',{}):
@@ -285,15 +270,14 @@ def prep_stageitems(stageitems):
         end=stageitem.get('end')
         n=quantity/times
         if Gv.now>start and ((not end) or Gv.now<end):
-            # continue
-            # if n>1:
-            # print(stageId,itemId,n)
             if Data.stages.get(stageId):
-                for loot in Data.stages[stageId].outs:
-                    if loot.item.id==itemId:
-                        loot.n=n
-        # else:
-            # print(stageId,itemId,n)
+                if Data.items.get(itemId):
+                    out = Item(
+                        item=Data.items[itemId],
+                        n=n,
+                    )
+                    if out not in Data.stages[stageId].outs:
+                        Data.stages[stageId].outs.append(out)
 
 def prep_formula(formulas):
     for formula in formulas:
