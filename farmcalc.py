@@ -363,7 +363,7 @@ def calc(req,test=False):
         minimize: san(Stages+formulas,x)
         subject to: -loot(stages+formulas,x) <= -req
     '''
-    ex=0.018
+    ex=0.18
     def to_array(obj):
         exp=0
         gold=0
