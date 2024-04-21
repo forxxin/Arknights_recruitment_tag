@@ -28,7 +28,7 @@ except:
 class UiRoot(QMainWindow):
     def __init__(self):
         super(UiRoot, self).__init__()
-        self.setWindowTitle(f"Arknights Best Stages [minimize_stage_key={farmcalc.Data.minimize_stage_key}, server={farmcalc.Gv.server}]"  )
+        self.setWindowTitle(f"Arknights Best Stages"  )
         self.scroll = PyQt6.QtWidgets.QScrollArea()
         self.scroll.setVerticalScrollBarPolicy(PyQt6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(PyQt6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -68,9 +68,6 @@ class UiRoot(QMainWindow):
         if d:
             self.setGeometry(*d)
         self.widget_args.load_pos()
-    # def update(self):
-        # self.widget_layout.update()
-        # return super().update()
 
 class UiStageSelect(PyQt6.QtWidgets.QDialog):
     def __init__(self):
@@ -107,12 +104,16 @@ class UiArgs(PyQt6.QtWidgets.QWidget):
         self.widget_layout = PyQt6.QtWidgets.QHBoxLayout()
         self.setLayout(self.widget_layout)
         self.combs={}
-        for name,arg in {'server':'US CN JP KR','minimize_stage_key':'san minClearTime','lang':'en ja ko zh'}.items():
+        for name,arg in {
+            'server':'US CN JP KR',
+            'minimize_stage_key':'san minClearTime',
+            'lang':'en ja ko zh',
+            'show':' '.join([str(i) for i in range(1,11)]),
+        }.items():
             label=PyQt6.QtWidgets.QLabel(name)
             comb=PyQt6.QtWidgets.QComboBox()
             comb.addItems(arg.split())
             self.combs[name]=comb
-            # dump(comb)
             self.widget_layout.addWidget(label)
             self.widget_layout.addWidget(comb)
             self.widget_layout.addSpacerItem(PyQt6.QtWidgets.QSpacerItem(20, 0, hPolicy=PyQt6.QtWidgets.QSizePolicy.Policy.Fixed))
@@ -135,7 +136,7 @@ class UiArgs(PyQt6.QtWidgets.QWidget):
         if d:
             for t,comb in zip(d,self.combs.values()):
                 comb.setCurrentText(t)
-
+        UiItemImg.n=self.combs['show'].currentText()
 class UiTest(PyQt6.QtWidgets.QWidget):
     def __init__(self):
         super(UiTest, self).__init__()
@@ -173,7 +174,6 @@ class UiTest(PyQt6.QtWidgets.QWidget):
                     self.rect = rect
 
                 def paint(self, painter, *args, **kwargs):
-                    print('Paint Called')
                     painter.drawRect(self.rect)
             for i in range(4):
                 for j in range(4):
@@ -191,28 +191,32 @@ def img_data2file(img_data):
         yield anhrtags.GData.img(file,url)
 
 class UiItemImg(PyQt6.QtWidgets.QGraphicsItem):
+    n=3
     def __init__(self, item, parent=None):
         super(UiItemImg, self).__init__(parent)
-        # dump(self)
         self.setFlag(PyQt6.QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(PyQt6.QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.len=80
         self.len1=66
         self.wordlen=11
         self.item = item
-        self.beststages = [str([stage.code for stage in stages]+[f'{san:.3g}']) for stages,san in self.item.beststage]
+        self.beststages = [([stage.code for stage in stages],san) for stages,san in self.item.beststage]
         self.pixmaps = []
         file,file1 = img_data2file(item.img_data)
         self.pixmaps.append(PyQt6.QtGui.QPixmap(file).scaled(self.len,self.len,aspectRatioMode=PyQt6.QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=PyQt6.QtCore.Qt.TransformationMode.SmoothTransformation))
         self.pixmaps.append(PyQt6.QtGui.QPixmap(file1).scaled(self.len1,self.len1,aspectRatioMode=PyQt6.QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=PyQt6.QtCore.Qt.TransformationMode.SmoothTransformation))
-    def paint(self, painter, *args, **kwargs):
+    def paint(self, painter, option, widget):
         pixmap,pixmap1 = self.pixmaps
         x=int((self.len-self.len1)/2)
         painter.drawPixmap(0,0,pixmap)
         painter.drawPixmap(pixmap.rect().center()-pixmap1.rect().center(),pixmap1)
         painter.drawText(0,self.len+self.wordlen,self.item.name)
-        for idx,text in enumerate(self.beststages):
-            painter.drawText(0,self.len+self.wordlen*(2+idx),text)
+        for idx,(stages,san) in enumerate(self.beststages):
+            if idx>=int(UiItemImg.n):
+                if not self.isSelected():
+                    break
+            painter.drawText(0,self.len+self.wordlen*(2+idx),f"""[{', '.join(stages)}] {round(san,1):g}""")
+
     def boundingRect(self):
         return PyQt6.QtCore.QRectF(0,0,self.len,self.len)
 
@@ -239,6 +243,9 @@ class UiGraphicsView(PyQt6.QtWidgets.QGraphicsView):
                 self.scene.addItem(child)
         else:
             self.scene.addItem(children)
+    def mousePressEvent(self,event):
+        self.update()
+        return super().mousePressEvent(event)
     def mouseMoveEvent(self,event):
         self.update()
         return super().mouseMoveEvent(event)
@@ -278,32 +285,27 @@ class UiFormulaArrow(PyQt6.QtWidgets.QGraphicsItem):
         p1 = self.startItem.pos() + self.startItem.boundingRect().center()
         p3 = self.endItem.pos() + self.endItem.boundingRect().center()
 
-        pen = PyQt6.QtGui.QPen()
-        pen.setWidth(1)
+        # pen = PyQt6.QtGui.QPen()
+        # pen.setWidth(1)
         # painter.setRenderHint(PyQt6.QtGui.QPainter.Antialiasing)
 
-        if self.isSelected():
-            pen.setStyle(PyQt6.QtCore.Qt.PenStyle.DashLine)
-        else:
-            pen.setStyle(PyQt6.QtCore.Qt.PenStyle.SolidLine)
+        # if self.isSelected():
+            # pen.setStyle(PyQt6.QtCore.Qt.PenStyle.DashLine)
+        # else:
+            # pen.setStyle(PyQt6.QtCore.Qt.PenStyle.SolidLine)
 
         # pen.setColor(PyQt6.QtGui.QColor.black)
-        painter.setPen(pen)
+        # painter.setPen(pen)
         painter.drawLine(PyQt6.QtCore.QLineF(p1, p3))
         # painter.setBrush(PyQt6.QtCore.Qt.NoBrush)
 
-    def updatePosition(self):
-        pass
-
 def farmcalc_view(root,key,**args):
-    farmcalc.init(**args,n=3)
+    farmcalc.init(**args)
     view= UiGraphicsView(key)
     itemimgs={}
-    # print(id(farmcalc.Data.items))
     for itemId,item in farmcalc.Data.items.items():
         if item.img_data:
             itemimg = UiItemImg(item)
-            # print(item.id)
             view.addimg(itemimg)
             itemimgs[item.id]=itemimg
     for formulaId,formula in farmcalc.Data.formulas.items():
@@ -316,8 +318,10 @@ def farmcalc_view(root,key,**args):
                     view.addarrow(arrow)
     view.load_pos()
     return view
+
 def args2key(args):
-    return tuple(args.values())
+    return tuple(args.get(k) for k in ['server','minimize_stage_key','lang'])
+
 def main():
     app = QApplication(sys.argv)
     root = UiRoot()
@@ -328,10 +332,7 @@ def main():
     def set_view():
         args=root.args()
         key =args2key(args)
-        # for key_,view in views.items():
-            # if key_!=key:
-            # view.setParent(None)
-        # root.update()
+        args={k:v for k,v in args.items() if k in ['server','minimize_stage_key','lang']}
         if key in views:
             view=views[key]
         else:
@@ -341,6 +342,10 @@ def main():
     root.widget_args.btn_ok.clicked.connect(set_view)
     root.widget_args.combs['minimize_stage_key'].currentTextChanged.connect(set_view)
     root.widget_args.combs['lang'].currentTextChanged.connect(set_view)
+    @pyqtSlot(str)
+    def UiItemImg_n(text):
+        UiItemImg.n=text
+    root.widget_args.combs['show'].currentTextChanged.connect(UiItemImg_n)
     # root.add(UiTest())
     set_view()
     
