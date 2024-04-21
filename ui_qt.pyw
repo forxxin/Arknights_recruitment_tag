@@ -201,6 +201,11 @@ class UiItemImg(PyQt6.QtWidgets.QGraphicsItem):
         self.wordlen=11
         self.item = item
         self.beststages = [([stage.code for stage in stages],san) for stages,san in self.item.beststage]
+        self.strs = []
+        for idx,(stages,san) in enumerate(self.beststages):
+            s=f"""[{', '.join(stages)}] {round(san,1):g}"""
+            if s not in self.strs:
+                self.strs.append(s)
         self.pixmaps = []
         file,file1 = img_data2file(item.img_data)
         self.pixmaps.append(PyQt6.QtGui.QPixmap(file).scaled(self.len,self.len,aspectRatioMode=PyQt6.QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=PyQt6.QtCore.Qt.TransformationMode.SmoothTransformation))
@@ -211,12 +216,11 @@ class UiItemImg(PyQt6.QtWidgets.QGraphicsItem):
         painter.drawPixmap(0,0,pixmap)
         painter.drawPixmap(pixmap.rect().center()-pixmap1.rect().center(),pixmap1)
         painter.drawText(0,self.len+self.wordlen,self.item.name)
-        for idx,(stages,san) in enumerate(self.beststages):
+        for idx,s in enumerate(self.strs):
             if idx>=int(UiItemImg.n):
                 if not self.isSelected():
                     break
-            painter.drawText(0,self.len+self.wordlen*(2+idx),f"""[{', '.join(stages)}] {round(san,1):g}""")
-
+            painter.drawText(0,self.len+self.wordlen*(2+idx),s)
     def boundingRect(self):
         return PyQt6.QtCore.QRectF(0,0,self.len,self.len)
 
