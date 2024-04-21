@@ -1,8 +1,3 @@
-![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/6acd06b9-1a43-43e7-b0dc-63cea28f72b5)
-
-![image](https://github.com/forxxin/Arknights_recruitment_tag/assets/165651451/f06f09ba-6a4a-4731-bcfc-70301a883103)
-
-
 
 ## Install
 Install Python 3.12.2
