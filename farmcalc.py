@@ -72,6 +72,7 @@ def str_itemlist(itemlist):
 class Stage:
     name:str
     id:str
+    zoneId:str
     code:str
     san:int
     minClearTime:int
@@ -175,50 +176,7 @@ class Data:
     except_itemType=['RECRUIT_TAG'] + ['TEMP','LGG_SHD','ACTIVITY_ITEM',] 
     except_stageId=['recruit',]
     url_material = "https://raw.githubusercontent.com/Aceship/Arknight-Images/main/material/"
-    img_data={
-        "D32 Steel":('bg/item-5.png','0.png'),
-        "Bipolar Nanoflake":('bg/item-5.png','1.png'),
-        "Polymerization Preparation":('bg/item-5.png','2.png'),
-        "Crystalline Electroassembly":('bg/item-5.png','65.png'),
-        "RMA70-24":('bg/item-4.png','3.png'),
-        "Grindstone Pentahydrate":('bg/item-4.png','4.png'),
-        "Manganese Trihydrate":('bg/item-4.png','5.png'),
-        "White Horse Kohl":('bg/item-4.png','6.png'),
-        "Optimized Device":('bg/item-4.png','7.png'),
-        "Keton Colloid":('bg/item-4.png','8.png'),
-        "Oriron Block":('bg/item-4.png','9.png'),
-        "Polyester Lump":('bg/item-4.png','10.png'),
-        "Sugar Lump":('bg/item-4.png','11.png'),
-        "Orirock Concentration":('bg/item-4.png','12.png'),
-        "Incandescent Alloy Block":('bg/item-4.png','62.png'),
-        "Polymerized Gel":('bg/item-4.png','64.png'),
-        "Crystalline Circuit":('bg/item-4.png','66.png'),
-        "Integrated Device":('bg/item-3.png','13.png'),
-        "Aketon":('bg/item-3.png','14.png'),
-        "Oriron Cluster":('bg/item-3.png','15.png'),
-        "Polyester Pack":('bg/item-3.png','16.png'),
-        "Sugar Pack":('bg/item-3.png','17.png'),
-        "Orirock Cluster":('bg/item-3.png','18.png'),
-        "Loxic Kohl":('bg/item-3.png','31.png'),
-        "Grindstone":('bg/item-3.png','32.png'),
-        "Manganese Ore":('bg/item-3.png','33.png'),
-        "RMA70-12":('bg/item-3.png','34.png'),
-        "Incandescent Alloy":('bg/item-3.png','61.png'),
-        "Coagulating Gel":('bg/item-3.png','63.png'),
-        "Crystalline Component":('bg/item-3.png','67.png'),
-        "Device":('bg/item-2.png','19.png'),
-        "Polyketon":('bg/item-2.png','20.png'),
-        "Oriron":('bg/item-2.png','21.png'),
-        "Polyester":('bg/item-2.png','22.png'),
-        "Sugar":('bg/item-2.png','23.png'),
-        "Orirock Cube":('bg/item-2.png','24.png'),
-        "Damaged Device":('bg/item-1.png','25.png'),
-        "Diketon":('bg/item-1.png','26.png'),
-        "Oriron Shard":('bg/item-1.png','27.png'),
-        "Ester":('bg/item-1.png','28.png'),
-        "Sugar Substitute":('bg/item-1.png','29.png'),
-        "Orirock":('bg/item-1.png','30.png'),
-    }
+    img_data={'30011': ('bg/item-1.png', '30.png'), '30012': ('bg/item-2.png', '24.png'), '30013': ('bg/item-3.png', '18.png'), '30014': ('bg/item-4.png', '12.png'), '30061': ('bg/item-1.png', '25.png'), '30062': ('bg/item-2.png', '19.png'), '30063': ('bg/item-3.png', '13.png'), '30064': ('bg/item-4.png', '7.png'), '30031': ('bg/item-1.png', '28.png'), '30032': ('bg/item-2.png', '22.png'), '30033': ('bg/item-3.png', '16.png'), '30034': ('bg/item-4.png', '10.png'), '30021': ('bg/item-1.png', '29.png'), '30022': ('bg/item-2.png', '23.png'), '30023': ('bg/item-3.png', '17.png'), '30024': ('bg/item-4.png', '11.png'), '30041': ('bg/item-1.png', '27.png'), '30042': ('bg/item-2.png', '21.png'), '30043': ('bg/item-3.png', '15.png'), '30044': ('bg/item-4.png', '9.png'), '30051': ('bg/item-1.png', '26.png'), '30052': ('bg/item-2.png', '20.png'), '30053': ('bg/item-3.png', '14.png'), '30054': ('bg/item-4.png', '8.png'), '30073': ('bg/item-3.png', '31.png'), '30074': ('bg/item-4.png', '6.png'), '30083': ('bg/item-3.png', '33.png'), '30084': ('bg/item-4.png', '5.png'), '30093': ('bg/item-3.png', '32.png'), '30094': ('bg/item-4.png', '4.png'), '30103': ('bg/item-3.png', '34.png'), '30104': ('bg/item-4.png', '3.png'), '31013': ('bg/item-3.png', '63.png'), '31014': ('bg/item-4.png', '64.png'), '31023': ('bg/item-3.png', '61.png'), '31024': ('bg/item-4.png', '62.png'), '30115': ('bg/item-5.png', '2.png'), '30125': ('bg/item-5.png', '1.png'), '30135': ('bg/item-5.png', '0.png'), '31033': ('bg/item-3.png', '67.png'), '31034': ('bg/item-4.png', '66.png')}
     
 def prep_items(items):
     for item in items:
@@ -233,7 +191,7 @@ def prep_items(items):
                 img_data=[],
                 beststage=[],
             )
-            if (img_data:=Data.img_data.get(obj.name)):
+            if (img_data:=Data.img_data.get(obj.id)):
                 obj.img_data=img_data
             Data.items[itemId]=obj
 
@@ -252,6 +210,7 @@ def prep_stages(stages):
                 obj=Stage(
                     name=f'stage:{stage.get('code_i18n').get(Gv.lang)}',
                     id=stageId,
+                    zoneId=stage.get('zoneId'),
                     code=stage.get('code'),
                     san=stage.get('apCost'),
                     minClearTime=int(stage.get('minClearTime') or 999999999),
@@ -333,7 +292,6 @@ def print_lp(lp,args,req_,p=True):
             if isinstance(obj,Stage):
                 res_stage.append((obj,n))
             elif isinstance(obj,Formula):
-                # if p: print(f'    {obj.name}:{n:.1f}')
                 res_formula.append((obj,n))
     res_stage=sorted(res_stage,key=lambda i:-i[1])
     res_formula=sorted(res_formula,key=lambda i:-i[1])
@@ -365,13 +323,8 @@ def calc(req,test=False,minimize_stage_key='san'):
                 n=item.n
                 exp+=Data.item_exp.get(itemId,0)*n
                 d[itemId]=n
-                # if isinstance(obj,Stage) and obj.id in ['wk_kc_6','tough_12-08']:
-                    # if Data.item_exp.get(itemId,0):
-                        # print(Data.item_exp.get(itemId,0),n)
             return np.array([n if (n:=d.get(itemtype.id)) else 0 for itemtype in Data.items.values()])
         if isinstance(obj,Stage):
-            # if obj.id in ['wk_kc_6','tough_12-08']:
-                # print(obj)
             gold+=Data.stagecode_gold.get(obj.code,0)
             return np.append(item_array(obj.outs),[exp,gold])
         elif isinstance(obj,Formula):
@@ -451,7 +404,7 @@ req={
     '31034':0,                       #Crystalline Circuit                  #3 #MATERIAL:crystal
     '31053':0,                       #Compound Cutting Fluid               #2 #MATERIAL:cutting_fluid
     '31054':0,                       #Cutting Fluid Solution               #3 #MATERIAL:cutting_fluid
-    '30061':1,                       #Damaged Device                       #0 #MATERIAL:device
+    '30061':0,                       #Damaged Device                       #0 #MATERIAL:device
     '30062':0,                       #Device                               #1 #MATERIAL:device
     '30063':0,                       #Integrated Device                    #2 #MATERIAL:device
     '30064':0,                       #Optimized Device                     #3 #MATERIAL:device
@@ -490,56 +443,137 @@ req={
     '31044':0,                       #Refined Solvent                      #3 #MATERIAL:solvent
     '30021':0,                       #Sugar Substitute                     #0 #MATERIAL:sugar
     '30022':0,                       #Sugar                                #1 #MATERIAL:sugar
-    '30023':0,                       #Sugar Pack                           #2 #MATERIAL:sugar
+    '30023':10,                       #Sugar Pack                           #2 #MATERIAL:sugar
     '30024':0,                       #Sugar Lump                           #3 #MATERIAL:sugar
 }
 
 @cache
-def best_stages(minimize_stage_key='san'):
-    s4=[]
-    s5=[]
-    count=1234321
-    for itemid,v in req.items():
-        lp,args,req_=calc({itemid:count},test=True,minimize_stage_key=minimize_stage_key)
-        if lp.success:
+def best_stages(server=Gv.server,minimize_stage_key='san',n=1):
+    sans={}
+    for stageId,stage in Data.stages.items():
+        sans[stageId]=stage.san
+    def restore_san():
+        for stageId,stage in Data.stages.items():
+            stage.san=sans[stage.id]
+    result={}
+    count=1
+    # for itemid,v in req.items():
+    for itemid,v in Data.items.items():
+        restore_san()
+        stages_all=[]
+        min_san=None
+        i=n
+        while i>0:
+            i-=1
+            lp,args,req_=calc({itemid:1},test=True,minimize_stage_key=minimize_stage_key)
+            if not lp.success:
+                break
             res_stage,res_formula,san=print_lp(lp,args,req_,p=False)
-            beststage=[]
-            for stage,n in res_stage:
-                # if n>count/10:
-                if stage.id not in s4:
-                    s4.append(stage.id)
-                    s5.append(stage.id.replace('_perm',''))
+            if min_san==None:
+                min_san=san
+            # if san >= min_san*2:
+                # break
+            stages=[]
+            ce6=0
+            for stage,count in res_stage:
                 if stage.code!='CE-6':
-                    beststage.append(stage)
-            if (item:=Data.items.get(itemid)):
-                item.beststage=beststage
-        else:
-            print(itemid,lp)
-    if s4:
-        return s4,s5,minimize_stage_key
+                    stages.append(stage)
+                    Data.stages.get(stage.id).san*=1000
+                else:
+                    ce6=1
+            # if len(res_stage)>1+ce6:
+                # i=0
+            if stages:
+                stages_all.append((stages,san))
+        if stages_all:
+            result[itemid]=stages_all
+    return result
 
-loaded=False
-def init(minimize_stage_key='san'):
-    global loaded
-    if not loaded:
-        loaded=True
-        stages,items,stageitems,formulas = penguin_stats()
-        prep_items(items)
-        prep_stages(stages)
-        prep_stageitems(stageitems)
-        prep_formula(formulas)
-        s4,s5,minimize_stage_key = best_stages(minimize_stage_key=minimize_stage_key)
+# @cache
+# def best_stages(server=Gv.server,minimize_stage_key='san'):
+    # result={}
+    # s4=[]
+    # s5=[]
+    # count=1
+    # for itemid,v in Data.items.items():
+        # lp,args,req_=calc({itemid:count},test=True,minimize_stage_key=minimize_stage_key)
+        # if lp.success:
+            # res_stage,res_formula,san=print_lp(lp,args,req_,p=False)
+            # beststage=[]
+            # for stage,n in res_stage:
+                # if stage.id not in s4:
+                    # s4.append(stage.id)
+                    # s5.append(stage.id.replace('_perm',''))
+                # if stage.code!='CE-6':
+                    # beststage.append(stage)
+            # if (item:=Data.items.get(itemid)):
+                # item.beststage=beststage
+            # result[itemid]=beststage
+        # else:
+            # print(itemid,lp)
+    # return s4,s5,minimize_stage_key,result
+
+def set_item_beststage(result):
+    for itemid,beststage in result.items():
+        if (item:=Data.items.get(itemid)):
+            item.beststage=beststage
+
+def init(server='US',minimize_stage_key='',lang='en',update=False,n=1):
+    Gv.server=server #US CN JP KR
+    Gv.lang=lang #en ja ko zh
+    Data.items={}
+    Data.stages={}
+    Data.formulas={}
+    print('init',Gv.server,minimize_stage_key,Gv.lang,n)
+    stages,items,stageitems,formulas = penguin_stats(update=update)
+    prep_items(items)
+    prep_stages(stages)
+    prep_stageitems(stageitems)
+    prep_formula(formulas)
+    if minimize_stage_key: # san minClearTime
+        result = best_stages(server=Gv.server,minimize_stage_key=minimize_stage_key,n=n)
+        set_item_beststage(result)
         Data.minimize_stage_key=minimize_stage_key
 
-init(minimize_stage_key='san')
-# init(minimize_stage_key='minClearTime')
 if __name__ == '__main__':
+    init(server='US',minimize_stage_key='',lang='en',update=False)
+    
     # print(*[str(i) for i in Data.items.values()],sep='\n')
     # print(*[str(i) for i in Data.stages.values()],sep='\n')
     # print(*[str(i) for i in Data.formulas.values()],sep='\n')
-    # res=calc(req,minimize_stage_key='minClearTime')
-    res=calc(req,minimize_stage_key='san')
-    print_lp(*res)
+    # print_items()
+    
+    stages_all=[]
+    min_san=None
+    i=1
+    while i:
+        lp,args,req_=calc(req,minimize_stage_key='san')
+        if not lp.success:
+            break
+        res_stage,res_formula,san = print_lp(lp,args,req_,p=False)
+        stages=[]
+        if min_san==None:
+            min_san=san
+        if san >= min_san*2:
+            break
+        if res_stage:
+            for stage,n in res_stage:
+                if stage.code!='CE-6':
+                    if stage in stages:
+                        i=0
+                        break
+                    else:
+                        stages.append(stage)
+                    Data.stages.get(stage.id).san*=1000
+            stages.append(san)
+            stages_all.append(stages)
+    print(req_)
+    for stages in stages_all:
+        print([getattr(stage,'name',stage) for stage in stages])
+
+    # print()
+    # lp,args,req_=calc(req,minimize_stage_key='san')
+    # res_stage,res_formula,san = print_lp(lp,args,req_)
 
 '''
 scipy.optimize.linprog(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None, bounds=(0, None), method='highs', callback=None, options=None, x0=None, integrality=None)
