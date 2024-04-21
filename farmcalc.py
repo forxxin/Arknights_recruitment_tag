@@ -281,7 +281,7 @@ def print_lp(lp,args,req_,p=True):
         if p: print(lp.message)
         return
     x=lp.x
-    san = np.dot(args.get('c'),x)
+    san = float(np.dot(args.get('c'),x))
     if p: print('print_lp:')
     if p: print(req_)
     if p: print(f'    {san=}')
@@ -447,8 +447,38 @@ req={
     '30024':0,                       #Sugar Lump                           #3 #MATERIAL:sugar
 }
 
+@shelve_cache('./tmp/farmcalc.calc_multi.cache')
+def calc_multi(key):
+    server,minimize_stage_key,itemid = key.split()
+    stages_all=[]
+    min_san=None
+    i=3
+    while i>0:
+        # i-=1
+        lp,args,req_=calc({itemid:1},test=True,minimize_stage_key=minimize_stage_key)
+        if not lp.success:
+            break
+        res_stage,res_formula,san=print_lp(lp,args,req_,p=False)
+        if min_san==None:
+            min_san=san
+        if san >= min_san*2:
+            break
+        stages=[]
+        ce6=0
+        for stage,count in res_stage:
+            if stage.code!='CE-6':
+                stages.append(stage)
+                Data.stages.get(stage.id).san*=1000
+            else:
+                ce6=1
+        # if len(res_stage)>1+ce6:
+            # i=0
+        if stages:
+            stages_all.append((stages,san))
+    return stages_all
+
 @cache
-def best_stages(server=Gv.server,minimize_stage_key='san',n=1):
+def best_stages(server=Gv.server,minimize_stage_key='san'):
     sans={}
     for stageId,stage in Data.stages.items():
         sans[stageId]=stage.san
@@ -457,34 +487,9 @@ def best_stages(server=Gv.server,minimize_stage_key='san',n=1):
             stage.san=sans[stage.id]
     result={}
     count=1
-    # for itemid,v in req.items():
     for itemid,v in Data.items.items():
         restore_san()
-        stages_all=[]
-        min_san=None
-        i=n
-        while i>0:
-            i-=1
-            lp,args,req_=calc({itemid:1},test=True,minimize_stage_key=minimize_stage_key)
-            if not lp.success:
-                break
-            res_stage,res_formula,san=print_lp(lp,args,req_,p=False)
-            if min_san==None:
-                min_san=san
-            # if san >= min_san*2:
-                # break
-            stages=[]
-            ce6=0
-            for stage,count in res_stage:
-                if stage.code!='CE-6':
-                    stages.append(stage)
-                    Data.stages.get(stage.id).san*=1000
-                else:
-                    ce6=1
-            # if len(res_stage)>1+ce6:
-                # i=0
-            if stages:
-                stages_all.append((stages,san))
+        stages_all=calc_multi(' '.join((server,minimize_stage_key,itemid)))
         if stages_all:
             result[itemid]=stages_all
     return result
@@ -518,20 +523,20 @@ def set_item_beststage(result):
         if (item:=Data.items.get(itemid)):
             item.beststage=beststage
 
-def init(server='US',minimize_stage_key='',lang='en',update=False,n=1):
+def init(server='US',minimize_stage_key='',lang='en',update=False):
     Gv.server=server #US CN JP KR
     Gv.lang=lang #en ja ko zh
     Data.items={}
     Data.stages={}
     Data.formulas={}
-    print('init',Gv.server,minimize_stage_key,Gv.lang,n)
+    print('init',Gv.server,minimize_stage_key,Gv.lang)
     stages,items,stageitems,formulas = penguin_stats(update=update)
     prep_items(items)
     prep_stages(stages)
     prep_stageitems(stageitems)
     prep_formula(formulas)
     if minimize_stage_key: # san minClearTime
-        result = best_stages(server=Gv.server,minimize_stage_key=minimize_stage_key,n=n)
+        result = best_stages(server=Gv.server,minimize_stage_key=minimize_stage_key)
         set_item_beststage(result)
         Data.minimize_stage_key=minimize_stage_key
 
