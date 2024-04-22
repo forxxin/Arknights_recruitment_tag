@@ -452,23 +452,26 @@ def calc_multi(key):
     server,minimize_stage_key,itemid = key.split()
     stages_all=[]
     min_san=None
-    i=3
+    i=10
     while i>0:
-        # i-=1
+        i-=1
         lp,args,req_=calc({itemid:1},test=True,minimize_stage_key=minimize_stage_key)
         if not lp.success:
             break
-        res_stage,res_formula,san=print_lp(lp,args,req_,p=False)
+        res_stage,res_formula,san=print_lp(lp,args,req_,p=True)
+        stages=[]
         if min_san==None:
             min_san=san
         if san >= min_san*2:
             break
-        stages=[]
         ce6=0
         for stage,count in res_stage:
             if stage.code!='CE-6':
                 stages.append(stage)
-                Data.stages.get(stage.id).san*=1000
+                # if minimize_stage_key=='san':
+                    # Data.stages.get(stage.id).san*=1000
+                # elif minimize_stage_key=='minClearTime':
+                setattr(Data.stages.get(stage.id),minimize_stage_key,getattr(Data.stages.get(stage.id),minimize_stage_key)*1000)
             else:
                 ce6=1
         # if len(res_stage)>1+ce6:
@@ -479,16 +482,16 @@ def calc_multi(key):
 
 @cache
 def best_stages(server=Gv.server,minimize_stage_key='san'):
-    sans={}
+    d={}
     for stageId,stage in Data.stages.items():
-        sans[stageId]=stage.san
-    def restore_san():
+        d[stageId]=getattr(stage,minimize_stage_key)
+    def restore():
         for stageId,stage in Data.stages.items():
-            stage.san=sans[stage.id]
+            setattr(stage,minimize_stage_key,d[stage.id])
     result={}
     count=1
     for itemid,v in Data.items.items():
-        restore_san()
+        restore()
         stages_all=calc_multi(' '.join((server,minimize_stage_key,itemid)))
         if stages_all:
             result[itemid]=stages_all
@@ -541,7 +544,7 @@ def init(server='US',minimize_stage_key='',lang='en',update=False):
         Data.minimize_stage_key=minimize_stage_key
 
 if __name__ == '__main__':
-    init(server='US',minimize_stage_key='',lang='en',update=False)
+    init(server='US',minimize_stage_key='minClearTime',lang='en',update=False)
     
     # print(*[str(i) for i in Data.items.values()],sep='\n')
     # print(*[str(i) for i in Data.stages.values()],sep='\n')
