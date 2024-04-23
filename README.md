@@ -14,9 +14,9 @@ Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
 edit code:   ```anhrtags.pyw```:```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
 
 
-### ocr: to use wireless adb:
+### ADB
   add adb.exe to PATH https://developer.android.com/tools/releases/platform-tools
-  
+#### to use wireless adb:
   ```adb pair 192.168.0.39:15468 314692```
   
 
