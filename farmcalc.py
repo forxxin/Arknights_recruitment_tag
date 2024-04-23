@@ -31,12 +31,54 @@ import anhrtags
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 
-class Gv:
+class Data:
     server='US' #US CN JP KR
     # server='CN' #US CN JP KR
     lang='en'
     now = datetime.now().timestamp()*1000
-    
+    minimize_stage_key=''
+    items={}
+    stages={}
+    formulas={}
+    item_exp={
+        '2001':200,
+        '2002':400,
+        '2003':1000,
+        '2004':2000,
+    }
+    stagecode_gold={
+        '1-1':660,
+        '2-7':1500,
+        '3-6':2040,
+        '4-1':2700,
+        '6-1':1216,
+        '7-3':1216,
+        'R8-1':2700,
+        'R8-4':1216,
+        '9-2':2700,
+        '9-3':1216,
+        '10-8':3480,
+        'S2-2':1020,
+        'S4-6':3480,
+        'S5-2':2700,
+        'S5-3':1216,
+        'S5-5':1216,
+        'S6-2':1216,
+        'S6-4':2700,
+        'S7-1':2700,
+        'S7-2':1216,
+        'CE-1':1700,
+        'CE-2':2800,
+        'CE-3':4100,
+        'CE-4':5700,
+        'CE-5':7500,
+        'CE-6':10000,
+    }
+    except_itemType=['RECRUIT_TAG'] + ['TEMP','LGG_SHD','ACTIVITY_ITEM',]
+    except_stageId=['recruit',]
+    url_material = "https://raw.githubusercontent.com/Aceship/Arknight-Images/main/material/"
+    img_data={'30011': ('bg/item-1.png', '30.png'), '30012': ('bg/item-2.png', '24.png'), '30013': ('bg/item-3.png', '18.png'), '30014': ('bg/item-4.png', '12.png'), '30061': ('bg/item-1.png', '25.png'), '30062': ('bg/item-2.png', '19.png'), '30063': ('bg/item-3.png', '13.png'), '30064': ('bg/item-4.png', '7.png'), '30031': ('bg/item-1.png', '28.png'), '30032': ('bg/item-2.png', '22.png'), '30033': ('bg/item-3.png', '16.png'), '30034': ('bg/item-4.png', '10.png'), '30021': ('bg/item-1.png', '29.png'), '30022': ('bg/item-2.png', '23.png'), '30023': ('bg/item-3.png', '17.png'), '30024': ('bg/item-4.png', '11.png'), '30041': ('bg/item-1.png', '27.png'), '30042': ('bg/item-2.png', '21.png'), '30043': ('bg/item-3.png', '15.png'), '30044': ('bg/item-4.png', '9.png'), '30051': ('bg/item-1.png', '26.png'), '30052': ('bg/item-2.png', '20.png'), '30053': ('bg/item-3.png', '14.png'), '30054': ('bg/item-4.png', '8.png'), '30073': ('bg/item-3.png', '31.png'), '30074': ('bg/item-4.png', '6.png'), '30083': ('bg/item-3.png', '33.png'), '30084': ('bg/item-4.png', '5.png'), '30093': ('bg/item-3.png', '32.png'), '30094': ('bg/item-4.png', '4.png'), '30103': ('bg/item-3.png', '34.png'), '30104': ('bg/item-4.png', '3.png'), '31013': ('bg/item-3.png', '63.png'), '31014': ('bg/item-4.png', '64.png'), '31023': ('bg/item-3.png', '61.png'), '31024': ('bg/item-4.png', '62.png'), '30115': ('bg/item-5.png', '2.png'), '30125': ('bg/item-5.png', '1.png'), '30135': ('bg/item-5.png', '0.png'), '31033': ('bg/item-3.png', '67.png'), '31034': ('bg/item-4.png', '66.png')}
+
 @shelve_cache('./tmp/farmcalc._get_json.cache')
 def _get_json(key):
     penguin_api = 'https://penguin-stats.io/PenguinStats/api/v2/'
@@ -58,7 +100,7 @@ def penguin_stats(update=False):
         if (not os.path.isfile(file)) or update:
             save_json(file,data)
         return data
-    stages = _penguin_stats('stages',f'stages?server={Gv.server}',Gv.server)
+    stages = _penguin_stats('stages',f'stages?server={Data.server}',Data.server)
     items = _penguin_stats('items','items')
     stageitems = _penguin_stats('stageitems','result/matrix?show_closed_zone=false')
     stageitems_all = _penguin_stats('stageitems_all','result/matrix?show_closed_zone=true')
@@ -83,7 +125,7 @@ class Stage:
         return f'{self.name}|{self.danger_level}: {self.san}San = {str_itemlist(self.outs)}'
     def normaldrops(self):
         return [Data.items[itemId] for itemId in self.normal_drop]
-    
+
 @dataclass
 class ItemType():
     name:str
@@ -133,57 +175,13 @@ class Req:
         str_gold=f'{self.gold}LMD' if self.gold else ''
         str_exp=f'{self.exp}Exp' if self.exp else ''
         return f'Req: {' + '.join([i for i in [str_gold,str_exp,str_itemlist(self.reqs)] if i])}'
-    
-class Data:
-    minimize_stage_key=''
-    items={}
-    stages={}
-    formulas={}
-    item_exp={
-        '2001':200,
-        '2002':400,
-        '2003':1000,
-        '2004':2000,
-    }
-    stagecode_gold={
-        '1-1':660,
-        '2-7':1500,
-        '3-6':2040,
-        '4-1':2700,
-        '6-1':1216,
-        '7-3':1216,
-        'R8-1':2700,
-        'R8-4':1216,
-        '9-2':2700,
-        '9-3':1216,
-        '10-8':3480,
-        'S2-2':1020,
-        'S4-6':3480,
-        'S5-2':2700,
-        'S5-3':1216,
-        'S5-5':1216,
-        'S6-2':1216,
-        'S6-4':2700,
-        'S7-1':2700,
-        'S7-2':1216,
-        'CE-1':1700,
-        'CE-2':2800,
-        'CE-3':4100,
-        'CE-4':5700,
-        'CE-5':7500,
-        'CE-6':10000,
-    }
-    except_itemType=['RECRUIT_TAG'] + ['TEMP','LGG_SHD','ACTIVITY_ITEM',] 
-    except_stageId=['recruit',]
-    url_material = "https://raw.githubusercontent.com/Aceship/Arknight-Images/main/material/"
-    img_data={'30011': ('bg/item-1.png', '30.png'), '30012': ('bg/item-2.png', '24.png'), '30013': ('bg/item-3.png', '18.png'), '30014': ('bg/item-4.png', '12.png'), '30061': ('bg/item-1.png', '25.png'), '30062': ('bg/item-2.png', '19.png'), '30063': ('bg/item-3.png', '13.png'), '30064': ('bg/item-4.png', '7.png'), '30031': ('bg/item-1.png', '28.png'), '30032': ('bg/item-2.png', '22.png'), '30033': ('bg/item-3.png', '16.png'), '30034': ('bg/item-4.png', '10.png'), '30021': ('bg/item-1.png', '29.png'), '30022': ('bg/item-2.png', '23.png'), '30023': ('bg/item-3.png', '17.png'), '30024': ('bg/item-4.png', '11.png'), '30041': ('bg/item-1.png', '27.png'), '30042': ('bg/item-2.png', '21.png'), '30043': ('bg/item-3.png', '15.png'), '30044': ('bg/item-4.png', '9.png'), '30051': ('bg/item-1.png', '26.png'), '30052': ('bg/item-2.png', '20.png'), '30053': ('bg/item-3.png', '14.png'), '30054': ('bg/item-4.png', '8.png'), '30073': ('bg/item-3.png', '31.png'), '30074': ('bg/item-4.png', '6.png'), '30083': ('bg/item-3.png', '33.png'), '30084': ('bg/item-4.png', '5.png'), '30093': ('bg/item-3.png', '32.png'), '30094': ('bg/item-4.png', '4.png'), '30103': ('bg/item-3.png', '34.png'), '30104': ('bg/item-4.png', '3.png'), '31013': ('bg/item-3.png', '63.png'), '31014': ('bg/item-4.png', '64.png'), '31023': ('bg/item-3.png', '61.png'), '31024': ('bg/item-4.png', '62.png'), '30115': ('bg/item-5.png', '2.png'), '30125': ('bg/item-5.png', '1.png'), '30135': ('bg/item-5.png', '0.png'), '31033': ('bg/item-3.png', '67.png'), '31034': ('bg/item-4.png', '66.png')}
-    
+
 def prep_items(items):
     for item in items:
-        if item.get('existence').get(Gv.server).get('exist')==True and (item.get('itemType') not in Data.except_itemType):
+        if item.get('existence').get(Data.server).get('exist')==True and (item.get('itemType') not in Data.except_itemType):
             itemId=item.get('itemId')
             obj=ItemType(
-                name=item.get('name_i18n').get(Gv.lang),
+                name=item.get('name_i18n').get(Data.lang),
                 id=itemId,
                 rarity=item.get('rarity'),
                 itemType=item.get('itemType'),
@@ -203,12 +201,12 @@ def prep_stages(stages):
         return 0
     for stage in stages:
         dropInfos=stage.get('dropInfos',{})
-        if stage.get('existence').get(Gv.server).get('exist')==True:
+        if stage.get('existence').get(Data.server).get('exist')==True:
             if (stageId:=stage.get('stageId')) not in Data.except_stageId:
                 normal_drop = [dropInfo.get('itemId') for dropInfo in dropInfos if dropInfo.get('dropType')=='NORMAL_DROP' and dropInfo.get('itemId')]
                 stageinfo=stageinfos.get(stageId,{})
                 obj=Stage(
-                    name=f'stage:{stage.get('code_i18n').get(Gv.lang)}',
+                    name=f'stage:{stage.get('code_i18n').get(Data.lang)}',
                     id=stageId,
                     zoneId=stage.get('zoneId'),
                     code=stage.get('code'),
@@ -221,7 +219,7 @@ def prep_stages(stages):
                 itemIds=set()
                 Data.stages[stageId]=obj
 
-def prep_stageitems(stageitems):
+def prep_stages_stageitems(stageitems):
     for stageitem in stageitems.get('matrix',{}):
         stageId=stageitem.get('stageId')
         itemId=stageitem.get('itemId')
@@ -230,7 +228,7 @@ def prep_stageitems(stageitems):
         start=stageitem.get('start')
         end=stageitem.get('end')
         n=quantity/times
-        if Gv.now>start and ((not end) or Gv.now<end):
+        if Data.now>start and ((not end) or Data.now<end):
             if Data.stages.get(stageId):
                 if Data.items.get(itemId):
                     out = Item(
@@ -240,7 +238,7 @@ def prep_stageitems(stageitems):
                     if out not in Data.stages[stageId].outs:
                         Data.stages[stageId].outs.append(out)
 
-def prep_formula(formulas):
+def prep_formulas(formulas):
     for formula in formulas:
         itemId=formula.get('id')
         obj=Formula(
@@ -275,7 +273,6 @@ def prep_formula(formulas):
         Data.formulas[itemId]=obj
         assert totalWeight==weight_all
 
-
 def print_lp(lp,args,req_,p=True):
     if not lp.success:
         if p: print(lp.message)
@@ -306,7 +303,7 @@ def calc(req,test=False,minimize_stage_key='san'):
         x=[?]
         minimize: san(Stages+formulas,x)
         subject to: -loot(stages+formulas,x) <= -req
-        
+
         x=[?]
         minimize: minClearTime(Stages+formulas,x)
         subject to: -loot(stages+formulas,x) <= -req
@@ -335,7 +332,7 @@ def calc(req,test=False,minimize_stage_key='san'):
     xkey0=list(Data.stages.keys())
     xkey1=list(Data.formulas.keys())
     xkey=xkey0+xkey1
-    
+
     req_=Req(
         gold=req.get('gold',0),
         exp=req.get('exp',0),
@@ -350,10 +347,10 @@ def calc(req,test=False,minimize_stage_key='san'):
     args={
         'c':np.array([getattr(stage,minimize_stage_key) for stage in Data.stages.values()] + [0 for formula in Data.formulas.values()]),
         'A_ub':-np.array(
-            [to_array(stage) for stage in Data.stages.values()] + 
+            [to_array(stage) for stage in Data.stages.values()] +
             [to_array(formula) for formula in Data.formulas.values()]
         ).T,
-        'b_ub':-to_array(req_), 
+        'b_ub':-to_array(req_),
         'integrality':integrality, #1,3: very slow
         'A_eq':None, 'b_eq':None, 'bounds':(0, None), 'method':'highs', 'callback':None, 'options':None, 'x0':None #default
     }
@@ -364,7 +361,7 @@ def print_items():
     '''print req={}'''
     items=sorted(list(Data.items.values()),key=lambda i:(i.itemType,i.groupID,i.rarity,i.name,i.id))
     print(*[f"""{' '*8}'{i.id}':100,{' '*(28-len(i.id))}#{i.name:<37}#{i.rarity} #{i.itemType}:{i.groupID}""" for i in items],sep='\n')
-    
+
 req={
     'gold':0,
     'exp':0,
@@ -373,10 +370,10 @@ req={
     '30135':0,                       #D32 Steel                            #4 #ARKPLANNER:
     '30155':0,                       #Nucleic Crystal Sinter               #4 #ARKPLANNER:
     '30115':0,                       #Polymerization Preparation           #4 #ARKPLANNER:
-    '2001':0,                        #Drill Battle Record                  #1 #CARD_EXP:exp
-    '2002':0,                        #Frontline Battle Record              #2 #CARD_EXP:exp
-    '2003':0,                        #Tactical Battle Record               #3 #CARD_EXP:exp
-    '2004':0,                        #Strategic Battle Record              #4 #CARD_EXP:exp
+    # '2001':0,                        #Drill Battle Record                  #1 #CARD_EXP:exp
+    # '2002':0,                        #Frontline Battle Record              #2 #CARD_EXP:exp
+    # '2003':0,                        #Tactical Battle Record               #3 #CARD_EXP:exp
+    # '2004':0,                        #Strategic Battle Record              #4 #CARD_EXP:exp
     '3251':0,                        #Caster Chip                          #2 #CHIP:chip
     '3231':0,                        #Defender Chip                        #2 #CHIP:chip
     '3221':0,                        #Guard Chip                           #2 #CHIP:chip
@@ -419,7 +416,7 @@ req={
     '30051':0,                       #Diketon                              #0 #MATERIAL:keton
     '30052':0,                       #Polyketon                            #1 #MATERIAL:keton
     '30053':0,                       #Aketon                               #2 #MATERIAL:keton
-    '30054':0,                       #Keton Colloid                        #3 #MATERIAL:keton 
+    '30054':0,                       #Keton Colloid                        #3 #MATERIAL:keton
     '30073':0,                       #Loxic Kohl                           #2 #MATERIAL:kohl
     '30074':0,                       #White Horse Kohl                     #3 #MATERIAL:kohl
     '30083':0,                       #Manganese Ore                        #2 #MATERIAL:manganese
@@ -468,9 +465,6 @@ def calc_multi(key):
         for stage,count in res_stage:
             if stage.code!='CE-6':
                 stages.append(stage)
-                # if minimize_stage_key=='san':
-                    # Data.stages.get(stage.id).san*=1000
-                # elif minimize_stage_key=='minClearTime':
                 setattr(Data.stages.get(stage.id),minimize_stage_key,getattr(Data.stages.get(stage.id),minimize_stage_key)*1000)
             else:
                 ce6=1
@@ -481,7 +475,7 @@ def calc_multi(key):
     return stages_all
 
 @cache
-def best_stages(server=Gv.server,minimize_stage_key='san'):
+def best_stages(server=Data.server,minimize_stage_key='san'):
     d={}
     for stageId,stage in Data.stages.items():
         d[stageId]=getattr(stage,minimize_stage_key)
@@ -491,6 +485,8 @@ def best_stages(server=Gv.server,minimize_stage_key='san'):
     result={}
     count=1
     for itemid,v in Data.items.items():
+        if v.itemType in ['CHIP','CARD_EXP','FURN','CHIP',] or itemid in ['3003',]:
+            continue
         restore()
         stages_all=calc_multi(' '.join((server,minimize_stage_key,itemid)))
         if stages_all:
@@ -498,7 +494,7 @@ def best_stages(server=Gv.server,minimize_stage_key='san'):
     return result
 
 # @cache
-# def best_stages(server=Gv.server,minimize_stage_key='san'):
+# def best_stages(server=Data.server,minimize_stage_key='san'):
     # result={}
     # s4=[]
     # s5=[]
@@ -527,30 +523,30 @@ def set_item_beststage(result):
             item.beststage=beststage
 
 def init(server='US',minimize_stage_key='',lang='en',update=False):
-    Gv.server=server #US CN JP KR
-    Gv.lang=lang #en ja ko zh
+    Data.server=server #US CN JP KR
+    Data.lang=lang #en ja ko zh
     Data.items={}
     Data.stages={}
     Data.formulas={}
-    print('init',Gv.server,minimize_stage_key,Gv.lang)
+    print('init',Data.server,minimize_stage_key,Data.lang)
     stages,items,stageitems,formulas = penguin_stats(update=update)
     prep_items(items)
     prep_stages(stages)
-    prep_stageitems(stageitems)
-    prep_formula(formulas)
+    prep_stages_stageitems(stageitems)
+    prep_formulas(formulas)
     if minimize_stage_key: # san minClearTime
-        result = best_stages(server=Gv.server,minimize_stage_key=minimize_stage_key)
+        result = best_stages(server=Data.server,minimize_stage_key=minimize_stage_key)
         set_item_beststage(result)
         Data.minimize_stage_key=minimize_stage_key
 
 if __name__ == '__main__':
-    init(server='US',minimize_stage_key='minClearTime',lang='en',update=False)
-    
+    init(server='US',minimize_stage_key='san',lang='en',update=False)
+
     # print(*[str(i) for i in Data.items.values()],sep='\n')
     # print(*[str(i) for i in Data.stages.values()],sep='\n')
     # print(*[str(i) for i in Data.formulas.values()],sep='\n')
     # print_items()
-    
+
     stages_all=[]
     min_san=None
     i=1
