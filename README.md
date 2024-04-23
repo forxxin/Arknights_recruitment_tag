@@ -7,7 +7,8 @@
 ![screenshot](screenshot/farm.png)
 
 ## arknights side story to unlock (2024-4-23)
-### by drop ```python stages.py```
+### by drop 
+```python stages.py```
 |                                   |                                                                ||
 |-----------------------------------|----------------------------------------------------------------|-|
 | Grani and the Knights' Treasure | GT-4[Sugar Substitute]0            | GT-5[Loxic Kohl->D32 Steel]4 |
