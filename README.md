@@ -8,15 +8,15 @@
 
 ## arknights side story to unlock (2024-4-23)
 ### by drop
-| "Grani and the Knights' Treasure" | # GT-4[Sugar Substitute]0 GT-5[Loxic Kohl->D32 Steel]4         |
+| Grani and the Knights' Treasure | GT-4[Sugar Substitute]0 GT-5[Loxic Kohl->D32 Steel]4         |
 |-----------------------------------|----------------------------------------------------------------|
-| "Heart of Surging Flame"          | # OF-F3[Sugar Pack->Bipolar Nanoflake]4                        |
-| "Twilight of Wolumonde"           | # TW-5[Device]1 TW-6[Incandescent Alloy->Crystalline Circuit]3 |
-| "Mansfield Break"                 | # MB-6[Sugar Pack->Transmuted Salt Agglomerate]3               |
-| "A Walk in the Dust"              | # WD-6[Polyester Pack->D32 Steel]4 WD-8[RMA70-12->D32 Steel]4  |
-| "Dossoles Holiday"                | # DH-4[Ester]0                                                 |
-| "Break the Ice"                   | # BI-5[Diketon]0                                               |
-| "Stultifera Navis"                | # SN-5[Oriron Shard]0                                          |
+| Heart of Surging Flame          | OF-F3[Sugar Pack->Bipolar Nanoflake]4                        |
+| Twilight of Wolumonde           | TW-5[Device]1 TW-6[Incandescent Alloy->Crystalline Circuit]3 |
+| Mansfield Break                 | MB-6[Sugar Pack->Transmuted Salt Agglomerate]3               |
+| A Walk in the Dust              | WD-6[Polyester Pack->D32 Steel]4 WD-8[RMA70-12->D32 Steel]4  |
+| Dossoles Holiday                | DH-4[Ester]0                                                 |
+| Break the Ice                   | BI-5[Diketon]0                                               |
+| Stultifera Navis                | SN-5[Oriron Shard]0                                          |
 
 ### by furniture
 | side story                     | fur store                                   | in store1 | full | amb  | cost | amb/cost    |
