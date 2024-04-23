@@ -9,7 +9,6 @@
 ## arknights side story to unlock (2024-4-23)
 ### by drop
 | Grani and the Knights' Treasure | GT-4[Sugar Substitute]0 GT-5[Loxic Kohl->D32 Steel]4         |
-|-----------------------------------|----------------------------------------------------------------|
 | Heart of Surging Flame          | OF-F3[Sugar Pack->Bipolar Nanoflake]4                        |
 | Twilight of Wolumonde           | TW-5[Device]1 TW-6[Incandescent Alloy->Crystalline Circuit]3 |
 | Mansfield Break                 | MB-6[Sugar Pack->Transmuted Salt Agglomerate]3               |
