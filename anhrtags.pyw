@@ -101,8 +101,17 @@ class GData():
 
     @staticmethod
     @cache
+    def url_gdata(lang): #story_review
+        if lang=='zh_CN':
+            return f'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/'
+        else:
+            return f'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData_YoStar/main/'
+        # return f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/gamedata/'
+
+    @staticmethod
+    @cache
     def json_table(name, lang='en_US'): #story_review
-        url = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/gamedata/{lang}/gamedata/excel/{name}_table.json'
+        url = GData.url_gdata(lang) + f'{lang}/gamedata/excel/{name}_table.json'
         file = f'./gdata/{name}_table_{lang}.json'
         GData.download(file,url)
         with open(file, "r", encoding="utf-8") as f:
@@ -112,10 +121,10 @@ class GData():
     @cache
     def json_data(name, lang='en_US'):
         if name=='gamedata':
-            url = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/gamedata/{lang}/gamedata/excel/{name}_const.json'
+            url = GData.url_gdata(lang) + f'{lang}/gamedata/excel/{name}_const.json'
             file = f'./gdata/{name}_const_{lang}.json'
         else:
-            url = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/gamedata/{lang}/gamedata/excel/{name}_data.json'
+            url = GData.url_gdata(lang) + f'{lang}/gamedata/excel/{name}_data.json'
             file = f'./gdata/{name}_data_{lang}.json'
         GData.download(file,url)
         with open(file, "r", encoding="utf-8") as f:
@@ -535,7 +544,7 @@ def img_tag(img_anhrtags,setup=False,img=None):
     else:
         from PIL import Image
         if isinstance(img,Image.Image):
-            img = cv.cvtColor(np.array(img), cv.COLOR_RGB2BGR)
+            img = cv.cvtColor(np.array(img), cv.COLOR_RGB2GRAY)
     img=resize(img,width=1000)
     height=int(img.shape[0])
     height_key=str(height)
@@ -563,7 +572,7 @@ def img_tag(img_anhrtags,setup=False,img=None):
 def _img_tag(img,setup=False):
     # cv.imwrite(f"anhrtags_1000.png",img)
     height=int(img.shape[0])
-    print(f'\nimg_tag :\n{height=}')
+    print(f'\n_img_tag :\n{height=}')
     th = cv.inRange(img, 49, 49)
     th1 = cv.inRange(img, 114, 114)
     th2 = cv.inRange(img, 141, 141)
@@ -571,6 +580,10 @@ def _img_tag(img,setup=False):
     th = cv.bitwise_or(th, th2)
     contours, hier = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
     contours_list = [(contour,cv.boundingRect(contour)) for contour in contours if cv.contourArea(contour)>1000]
+    # cv.imshow('img',th)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
+    print()
     tags=[]
     for contour,(x,y,w,h) in sorted(contours_list, key=lambda i:i[1][1],reverse=True):
         if len(tags)>=5:
