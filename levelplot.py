@@ -69,7 +69,6 @@ def cost1(rarity=6):
             # gold_sum+=gold_e
     return result
 
-
 def plot(count=None):
     ys=[[]]*7
     datas=[[]]+[cost1(rarity) for rarity in range(1,7)]
