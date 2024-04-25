@@ -1,4 +1,4 @@
-## arknights best recruit tag (2024-4-23)
+## arknights recruit tag (2024-4-23)
 ```python ui_qt.pyw```
 ![screenshot](screenshot/tag.png)
 
