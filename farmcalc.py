@@ -83,7 +83,7 @@ class Data:
 def _get_json(key):
     penguin_api = 'https://penguin-stats.io/PenguinStats/api/v2/'
     url = penguin_api + key
-    print(url)
+    print(f'downloading {url}')
     response = requests.get(url)
     return response.json()
 
@@ -455,7 +455,7 @@ def calc_multi(key):
         lp,args,req_=calc({itemid:1},test=True,minimize_stage_key=minimize_stage_key)
         if not lp.success:
             break
-        res_stage,res_formula,san=print_lp(lp,args,req_,p=True)
+        res_stage,res_formula,san=print_lp(lp,args,req_,p=False)
         stages=[]
         if min_san==None:
             min_san=san
