@@ -1,5 +1,5 @@
 ## arknights best recruit tag (2024-4-23)
-```python anhrtags.pyw```
+```python ui_qt.pyw```
 ![screenshot](screenshot/tag.png)
 
 ## arknights best farm stage (2024-4-23)
