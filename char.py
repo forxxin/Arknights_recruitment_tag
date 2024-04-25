@@ -685,8 +685,9 @@ class UiRecTag(QtWidgets.QMainWindow):
     signal_ocr_win = QtCore.pyqtSignal()
     signal_ocr_adb = QtCore.pyqtSignal()
     signal_adb_kill_server = QtCore.pyqtSignal(list)
-    def __init__(self,args):
+    def __init__(self,server='US',lang='en'):
         super(UiRecTag,self).__init__()
+        init(server,lang)
         self.setWindowTitle(f"Arknights Tags")
         widget = QtWidgets.QWidget(self)
         self.layout = MyVBoxLayout()
