@@ -34,28 +34,53 @@ class UiRoot(QtWidgets.QMainWindow):
         self.setWindowTitle(f"Arknights Tool")
         self.ui_farm = UiFarmStage()
         self.ui_farm.load_pos()
-        args=self.ui_farm.ui_args.args()
-        char.init(server=args.get('server'),lang=args.get('lang'))
-        self.ui_recr = char.UiRecTag({})
-        tabs = QtWidgets.QTabWidget()
-        tabs.addTab(self.ui_farm,'Best Stages')
-        tabs.addTab(self.ui_recr,'Recruit Tag')
-        self.setCentralWidget(tabs)
+        self.tabs = QtWidgets.QTabWidget()
+        self.tabs.addTab(self.ui_farm,'Best Stages')
+        self.setCentralWidget(self.tabs)
+        self.ui_recr_key = None
+        self.ui_recrs={}
+        self.set_rectab(1)
         self.load_pos()
+        self.tabs.currentChanged.connect(self.set_rectab)
     def closeEvent(self,event):
         self.save_pos()
         self.ui_farm.close_worker()
-        self.ui_recr.close_worker()
+        for ui_recr in self.ui_recrs.values():
+            ui_recr.close_worker()
     def save_pos(self):
         g=self.geometry()
-        d=[g.x(),g.y(),g.width(),g.height()]
+        d={'geometry':[g.x(),g.y(),g.width(),g.height()],'currentIndex':self.tabs.currentIndex()}
         saveobj.save_json(self.config,d)
         self.ui_farm.save_pos()
     def load_pos(self):
         d=saveobj.load_json(self.config)
-        if d:
-            self.setGeometry(*d)
-
+        if isinstance(d,dict):
+            if (geometry:=d.get('geometry')):
+                self.setGeometry(*geometry)
+            if (currentIndex:=d.get('currentIndex')) in [0,1]:
+                self.tabs.setCurrentIndex(currentIndex)
+    @QtCore.pyqtSlot(int)
+    def set_rectab(self,index):
+        if index==1:
+            key,server,lang=self.key_ui_recr()
+            if self.ui_recr_key==key:
+                return
+            self.ui_recr_key=key
+            if self.tabs.count()==2:
+                self.tabs.removeTab(1)
+            if key in self.ui_recrs:
+                ui_recr=self.ui_recrs[key]
+            else:
+                ui_recr = char.UiRecTag(server=server,lang=lang)
+                self.ui_recrs[key]=ui_recr
+            self.tabs.addTab(ui_recr,'Recruit Tag')
+            self.tabs.setCurrentIndex(1)
+    def key_ui_recr(self):
+        args=self.ui_farm.ui_args.args()
+        server=args.get('server')
+        lang=args.get('lang')
+        key=f'{server} {lang}'
+        return key,server,lang
 class UiFarmStageWorker(QtCore.QObject):
     finish_init = QtCore.pyqtSignal(tuple)
     def __init__(self, parent=None):
