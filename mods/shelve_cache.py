@@ -3,8 +3,7 @@ import weakref
 import os
 import sys
 import inspect
-
-def shelve_cache(cache_file=None):
+def shelve_cache(cache_file=None,ignore_first=False):
     '''
         @shelve_cache('D:/CS/PythonModules/cache/ydl.downloaded.status.cache')
         def download_status(ytid,status=download_status_unknown):
@@ -16,27 +15,50 @@ def shelve_cache(cache_file=None):
     caller_filename, caller_fileext = os.path.splitext(os.path.basename(inspect.stack()[1].filename))
     app_dir = os.path.dirname(sys.argv[0])
     def decorator(func):
-        def _func(key,*arg,usecache=True,**args):
-            if _func.debug:
-                print(f'cache_file:{_func.cache_file} {_func.func.__name__}{(key,arg,usecache,args)}')
-            if (not usecache) or (key not in _func.d):
-                res = _func.func(key,*arg,**args)
-                _func.d[key] = res
-                return res
-            else:
-                try:
-                    if _func.debug:
-                        print(f'\treturn {_func.d[key]}')
-                    return _func.d[key]
-                except Exception as e:
-                    try: _func.d[key]=None #might fix a truncated save file
-                    except: pass
-                    try: del _func.d[key] #might fix a truncated save file
-                    except: pass
-                    print('Exception shelve_cache',key,e.__class__.__name__,e)
+        if not ignore_first:
+            def _func(key,*arg,usecache=True,**args):
+                if _func.debug:
+                    print(f'cache_file:{_func.cache_file} {_func.func.__name__}{(key,arg,usecache,args)}')
+                if (not usecache) or (key not in _func.d):
                     res = _func.func(key,*arg,**args)
                     _func.d[key] = res
                     return res
+                else:
+                    try:
+                        if _func.debug:
+                            print(f'\treturn {_func.d[key]}')
+                        return _func.d[key]
+                    except Exception as e:
+                        try: _func.d[key]=None #might fix a truncated save file
+                        except: pass
+                        try: del _func.d[key] #might fix a truncated save file
+                        except: pass
+                        print('Exception shelve_cache',key,e.__class__.__name__,e)
+                        res = _func.func(key,*arg,**args)
+                        _func.d[key] = res
+                        return res
+        else:
+            def _func(not_use,key,*arg,usecache=True,**args):
+                if _func.debug:
+                    print(f'cache_file:{_func.cache_file} {_func.func.__name__}{(key,arg,usecache,args)}')
+                if (not usecache) or (key not in _func.d):
+                    res = _func.func(not_use,key,*arg,**args)
+                    _func.d[key] = res
+                    return res
+                else:
+                    try:
+                        if _func.debug:
+                            print(f'\treturn {_func.d[key]}')
+                        return _func.d[key]
+                    except Exception as e:
+                        try: _func.d[key]=None #might fix a truncated save file
+                        except: pass
+                        try: del _func.d[key] #might fix a truncated save file
+                        except: pass
+                        print('Exception shelve_cache',key,e.__class__.__name__,e)
+                        res = _func.func(not_use,key,*arg,**args)
+                        _func.d[key] = res
+                        return res
         def set_file(file=None):
             if file==None:
                 file = os.path.abspath(os.path.join(
@@ -65,6 +87,7 @@ def shelve_cache(cache_file=None):
         _func.sync = sync
         set_file(cache_file)
         return _func
+            
     return decorator
 
 def shelve_cache_clas(cache_file=None):
