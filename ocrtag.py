@@ -21,11 +21,11 @@ app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 pytesseract.pytesseract.tesseract_cmd = os.path.abspath(r'../../Tesseract-OCR/tesseract.exe')
 
-def windows_image(img_anhrtags,queue,app_title='Arknights',border=False,scaled=True):
+def windows_image(img_anhrtags,app_title='Arknights',border=False,scaled=True):
     from ctypes import windll
     from PIL import Image
     try:
-        tc=TimeCost()
+        # tc=TimeCost()
         def remove_img(img_anhrtags):
             if os.path.isfile(img_anhrtags):
                 os.remove(img_anhrtags)
@@ -58,13 +58,17 @@ def windows_image(img_anhrtags,queue,app_title='Arknights',border=False,scaled=T
         mfcDC.DeleteDC()
         win32gui.ReleaseDC(hwnd, hwndDC)
         if result == 1:
-            tc.end('in windows_image')
+            # tc.end('in windows_image')
             # img.save(img_anhrtags)
-            queue.put(img)
-        else:
-            queue.put(None)
+            return img
     except Exception as e:
         print(e)
+
+def windows_image_process(img_anhrtags,queue,app_title='Arknights',border=False,scaled=True):
+    img = windows_image(img_anhrtags,app_title=app_title,border=border,scaled=scaled)
+    if img:
+        queue.put(img)
+    else:
         queue.put(None)
 
 def resize(image, width=None, height=None):
@@ -100,18 +104,26 @@ class roi_data():
             json.dump(data,f)
 
 def win_tag(alltag,img_anhrtags, setup=False):
+    tc=TimeCost()
+    img = windows_image(img_anhrtags)
+    tc.end('windows_image')
+    ret = list(img_tag(alltag,img_anhrtags,setup=setup,img=img))
+    tc.end('img_tag')
+    return ret
+
+def win_tag_process(alltag,img_anhrtags, setup=False):
     from multiprocessing import Process,Queue
     tc=TimeCost()
     tc1=TimeCost()
     queue = Queue()
-    p = Process(target=windows_image, args=(img_anhrtags,queue))
+    p = Process(target=windows_image_process, args=(img_anhrtags,queue))
     p.start()
     img=queue.get()
-    tc.end('windows_image')
+    tc.end('windows_image_process')
     ret = list(img_tag(alltag,img_anhrtags,setup=setup,img=img))
     tc.end('img_tag')
     p.join()
-    tc1.end('win_tag')
+    tc1.end('win_tag_process')
     return ret
 
 def img_tag(alltag,img_anhrtags,setup=False,img=None):
@@ -179,9 +191,8 @@ def _img_tag(alltag,img,setup=False):
 
 def ocr_img(alltag,img,x,y,w,h):
     img_crop=img[y:y+h,x:x+w]
-    tag_ocrs = pytesseract.image_to_string(img_crop, config='''D:/CS/PythonCodes/Arknights/tessdata/bazaar''')
+    tag_ocrs = pytesseract.image_to_string(img_crop)
     tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS')
-    # alltag=[x for xs in Data.all_tags for x in xs]
     taglow_tag = {tag.lower():tag for tag in sorted(alltag, key=len, reverse=True)}
     print(tag_ocrs.strip())
     for tag_ocr in tag_ocrs.lower().split():
