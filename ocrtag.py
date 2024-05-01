@@ -4,6 +4,8 @@ import json
 import pprint
 import os
 import re
+import time
+from multiprocessing.dummy import Pool
 
 import cv2 as cv
 import numpy as np
@@ -20,6 +22,7 @@ except:
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 pytesseract.pytesseract.tesseract_cmd = os.path.abspath(r'../../Tesseract-OCR/tesseract.exe')
+SAVE_ROIIMG=False
 
 def windows_image(img_anhrtags,app_title='Arknights',border=False,scaled=True):
     from ctypes import windll
@@ -107,7 +110,7 @@ def win_tag(alltag,img_anhrtags, setup=False):
     tc=TimeCost()
     img = windows_image(img_anhrtags)
     tc.end('windows_image')
-    ret = list(img_tag(alltag,img_anhrtags,setup=setup,img=img))
+    ret = img_tag(alltag,img_anhrtags,setup=setup,img=img)
     tc.end('img_tag')
     return ret
 
@@ -120,7 +123,7 @@ def win_tag_process(alltag,img_anhrtags, setup=False):
     p.start()
     img=queue.get()
     tc.end('windows_image_process')
-    ret = list(img_tag(alltag,img_anhrtags,setup=setup,img=img))
+    ret = img_tag(alltag,img_anhrtags,setup=setup,img=img)
     tc.end('img_tag')
     p.join()
     tc1.end('win_tag_process')
@@ -140,26 +143,34 @@ def img_tag(alltag,img_anhrtags,setup=False,img=None):
     height_key=str(height)
     print(f'\nimg_tag:\n{height=}')
     roidata=roi_data().load()
+    def _ocr_img(roi):
+        return ocr_img(alltag,img,roi),roi
+    tags=[]
     if setup or (height_key not in roidata) or (height_key in roidata and height<1000 and not roidata[height_key]):
         ROIs=[]
-        tags=[]
-        for tag,x,y,w,h in _img_tag(alltag,img,setup=setup):
-            ROIs.append([x,y,w,h])
-            tags.append(tag)
+        ROIs_raw = img_roi(img)
+        with Pool(7) as pool:
+            for tags_,roi in pool.imap_unordered(_ocr_img, ROIs_raw):
+                print(roi,tags_)
+                if tags_:
+                    for tag in tags_:
+                        if tag not in tags:
+                            tags.append(tag)
+                    ROIs.append(roi)
         if len(ROIs)>=5:
             roidata[height_key]=ROIs
             roi_data().save(roidata)
-        yield from tags
+        return tags
     else:
         ROIs=roidata[height_key]
-        tags=[]
-        for x,y,w,h in ROIs:
-            for tag in ocr_img(alltag,img,x,y,w,h):
-                if tag not in tags:
-                    tags.append(tag)
-                    yield tag
+        with Pool(5) as pool:
+            for tags_,roi in pool.imap_unordered(_ocr_img, ROIs):
+                for tag in tags_:
+                    if tag not in tags:
+                        tags.append(tag)
+        return tags
 
-def _img_tag(alltag,img,setup=False):
+def img_roi(img):
     # cv.imwrite(f"anhrtags_1000.png",img)
     height=int(img.shape[0])
     print(f'\n_img_tag :\n{height=}')
@@ -174,32 +185,36 @@ def _img_tag(alltag,img,setup=False):
     # cv.waitKey(0)
     # cv.destroyAllWindows()
     print()
-    tags=[]
+    ROIs=[]
     for contour,(x,y,w,h) in sorted(contours_list, key=lambda i:i[1][1],reverse=True):
-        if len(tags)>=5:
-            return
         # if w in range(98-1,111+2) and h in range(30-1,35+2):
         x+=1
         y+=1
         w-=2
         h-=2
-        print(x,y,w,h,end=' ')
-        for tag in ocr_img(alltag,img,x,y,w,h):
-            if tag not in tags:
-                tags.append(tag)
-                yield tag,x,y,w,h
+        ROIs.append([x,y,w,h])
+    return ROIs
 
-def ocr_img(alltag,img,x,y,w,h):
+def save_img(file,img):
+    os.makedirs(os.path.dirname(file), exist_ok=True)
+    cv.imwrite(file,img)
+    
+def ocr_img(alltag,img,roi):
+    x,y,w,h=roi
     img_crop=img[y:y+h,x:x+w]
     tag_ocrs = pytesseract.image_to_string(img_crop)
     tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS')
     taglow_tag = {tag.lower():tag for tag in sorted(alltag, key=len, reverse=True)}
     print(tag_ocrs.strip())
+    tags=[]
     for tag_ocr in tag_ocrs.lower().split():
         for taglow,tag in taglow_tag.items():
             if taglow in tag_ocr:
-                yield tag
+                tags.append(tag)
                 break
+    if tags and SAVE_ROIIMG:
+        save_img(f"tmp/ocr_img/{'_'.join(tags)}_{int(time.time())}.png",img_crop)
+    return tags
 
 def adb_tag(alltag,img_anhrtags,setup=False):
     def _adb_tag(adev_name=''):
@@ -211,7 +226,7 @@ def adb_tag(alltag,img_anhrtags,setup=False):
         if isinstance(adev,shellcmd.AndroidDev):
             img = adev.screencap(name1=img_anhrtags,open_img=False)
             if img:
-                return list(img_tag(alltag,img,setup=setup))
+                return img_tag(alltag,img,setup=setup)
     tags = _adb_tag()
     if tags:
         return tags
