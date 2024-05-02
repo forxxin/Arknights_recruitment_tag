@@ -1,8 +1,5 @@
 
-import urllib.request
-import json
 import requests
-import pprint
 import os
 from datetime import datetime
 from functools import cache
@@ -14,19 +11,18 @@ try:
     from scipy.optimize import linprog
     import numpy as np
 except Exception as e:
-    print(e)
+    print('import',type(e),e)
 
 try:
-    from shelve_cache import shelve_cache,shelve_cache_clas
+    from shelve_cache import shelve_cache
 except:
-    from mods.shelve_cache import shelve_cache,shelve_cache_clas
-
+    from mods.shelve_cache import shelve_cache
 try:
     from saveobj import save_json,load_json
 except:
     from mods.saveobj import save_json,load_json
 
-import anhrtags
+import resource
 
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
@@ -113,67 +109,6 @@ req={
     '30024':0,                       #Sugar Lump                           #3 #MATERIAL:sugar
 }
 
-# class Data:
-    # server='US' #US CN JP KR
-    # lang='en'
-    # now = datetime.now().timestamp()*1000
-    # minimize_stage_key=''
-    # items={}
-    # stages={}
-    # formulas={}
-    # item_exp={
-        # '2001':200,
-        # '2002':400,
-        # '2003':1000,
-        # '2004':2000,
-    # }
-    # stagecode_gold={
-        # '1-1':660,
-        # '2-7':1500,
-        # '3-6':2040,
-        # '4-1':2700,
-        # '6-1':1216,
-        # '7-3':1216,
-        # 'R8-1':2700,
-        # 'R8-4':1216,
-        # '9-2':2700,
-        # '9-3':1216,
-        # '10-8':3480,
-        # 'S2-2':1020,
-        # 'S4-6':3480,
-        # 'S5-2':2700,
-        # 'S5-3':1216,
-        # 'S5-5':1216,
-        # 'S6-2':1216,
-        # 'S6-4':2700,
-        # 'S7-1':2700,
-        # 'S7-2':1216,
-        # 'CE-1':1700,
-        # 'CE-2':2800,
-        # 'CE-3':4100,
-        # 'CE-4':5700,
-        # 'CE-5':7500,
-        # 'CE-6':10000,
-    # }
-    # except_itemType=['RECRUIT_TAG'] + ['TEMP','LGG_SHD','ACTIVITY_ITEM',]
-    # except_stageId=['recruit',]
-    # url_material = "https://raw.githubusercontent.com/Aceship/Arknight-Images/main/material/"
-    # img_data={'30011': ('bg/item-1.png', '30.png'), '30012': ('bg/item-2.png', '24.png'), '30013': ('bg/item-3.png', '18.png'), '30014': ('bg/item-4.png', '12.png'), '30061': ('bg/item-1.png', '25.png'), '30062': ('bg/item-2.png', '19.png'), '30063': ('bg/item-3.png', '13.png'), '30064': ('bg/item-4.png', '7.png'), '30031': ('bg/item-1.png', '28.png'), '30032': ('bg/item-2.png', '22.png'), '30033': ('bg/item-3.png', '16.png'), '30034': ('bg/item-4.png', '10.png'), '30021': ('bg/item-1.png', '29.png'), '30022': ('bg/item-2.png', '23.png'), '30023': ('bg/item-3.png', '17.png'), '30024': ('bg/item-4.png', '11.png'), '30041': ('bg/item-1.png', '27.png'), '30042': ('bg/item-2.png', '21.png'), '30043': ('bg/item-3.png', '15.png'), '30044': ('bg/item-4.png', '9.png'), '30051': ('bg/item-1.png', '26.png'), '30052': ('bg/item-2.png', '20.png'), '30053': ('bg/item-3.png', '14.png'), '30054': ('bg/item-4.png', '8.png'), '30073': ('bg/item-3.png', '31.png'), '30074': ('bg/item-4.png', '6.png'), '30083': ('bg/item-3.png', '33.png'), '30084': ('bg/item-4.png', '5.png'), '30093': ('bg/item-3.png', '32.png'), '30094': ('bg/item-4.png', '4.png'), '30103': ('bg/item-3.png', '34.png'), '30104': ('bg/item-4.png', '3.png'), '31013': ('bg/item-3.png', '63.png'), '31014': ('bg/item-4.png', '64.png'), '31023': ('bg/item-3.png', '61.png'), '31024': ('bg/item-4.png', '62.png'), '30115': ('bg/item-5.png', '2.png'), '30125': ('bg/item-5.png', '1.png'), '30135': ('bg/item-5.png', '0.png'), '31033': ('bg/item-3.png', '67.png'), '31034': ('bg/item-4.png', '66.png')}
-
-@shelve_cache('./tmp/farmcalc._get_json.cache')
-def _get_json(key):
-    penguin_api = 'https://penguin-stats.io/PenguinStats/api/v2/'
-    url = penguin_api + key
-    print(f'downloading {url}')
-    response = requests.get(url)
-    return response.json()
-
-def get_json(key,update=False):
-    if update:
-        return _get_json(key,usecache=False)
-    else:
-        return _get_json(key)
-
 def str_itemlist(itemlist):
     return ' + '.join([str(i) for i in itemlist if str(i)])
 
@@ -197,13 +132,14 @@ class Stage:
 class ItemType():
     name:str
     id:str
+    # iconId:str
+    groupID:str
     rarity:int
     itemType:str
-    groupID:str
-    img_data:list
+    # img_data:list
     beststage:list
     def __str__(self):
-        # return f'{self.name}:{self.id}:{self.rarity}:{self.itemType}:{self.groupID}'
+        # return f'{self.name}:{self.id}:{self.rarity}:{self.itemType}'
         return f'{self.name}'
 
 @dataclass
@@ -220,8 +156,8 @@ class Item():
         ret = copy.copy(self)
         ret.n*=v
         return ret
-
     __rmul__ = __mul__
+
 @dataclass
 class Formula:
     name:str
@@ -282,56 +218,54 @@ class FarmCalc():
     except_itemType=['RECRUIT_TAG'] + ['TEMP','LGG_SHD','ACTIVITY_ITEM',]
     except_stageId=['recruit',]
     url_material = "https://raw.githubusercontent.com/Aceship/Arknight-Images/main/material/"
-    img_data={'30011': ('bg/item-1.png', '30.png'), '30012': ('bg/item-2.png', '24.png'), '30013': ('bg/item-3.png', '18.png'), '30014': ('bg/item-4.png', '12.png'), '30061': ('bg/item-1.png', '25.png'), '30062': ('bg/item-2.png', '19.png'), '30063': ('bg/item-3.png', '13.png'), '30064': ('bg/item-4.png', '7.png'), '30031': ('bg/item-1.png', '28.png'), '30032': ('bg/item-2.png', '22.png'), '30033': ('bg/item-3.png', '16.png'), '30034': ('bg/item-4.png', '10.png'), '30021': ('bg/item-1.png', '29.png'), '30022': ('bg/item-2.png', '23.png'), '30023': ('bg/item-3.png', '17.png'), '30024': ('bg/item-4.png', '11.png'), '30041': ('bg/item-1.png', '27.png'), '30042': ('bg/item-2.png', '21.png'), '30043': ('bg/item-3.png', '15.png'), '30044': ('bg/item-4.png', '9.png'), '30051': ('bg/item-1.png', '26.png'), '30052': ('bg/item-2.png', '20.png'), '30053': ('bg/item-3.png', '14.png'), '30054': ('bg/item-4.png', '8.png'), '30073': ('bg/item-3.png', '31.png'), '30074': ('bg/item-4.png', '6.png'), '30083': ('bg/item-3.png', '33.png'), '30084': ('bg/item-4.png', '5.png'), '30093': ('bg/item-3.png', '32.png'), '30094': ('bg/item-4.png', '4.png'), '30103': ('bg/item-3.png', '34.png'), '30104': ('bg/item-4.png', '3.png'), '31013': ('bg/item-3.png', '63.png'), '31014': ('bg/item-4.png', '64.png'), '31023': ('bg/item-3.png', '61.png'), '31024': ('bg/item-4.png', '62.png'), '30115': ('bg/item-5.png', '2.png'), '30125': ('bg/item-5.png', '1.png'), '30135': ('bg/item-5.png', '0.png'), '31033': ('bg/item-3.png', '67.png'), '31034': ('bg/item-4.png', '66.png')}
 
     def __init__(self,server='US',minimize_stage_key='',lang='en',update=False):
         self.server=server #US CN JP KR
         self.lang=lang #en ja ko zh
+        self.lang2=resource.lang2(self.lang)
         self.items={}
         self.stages={}
         self.formulas={}
-        print('FarmCalc.__init__',self.server,minimize_stage_key,self.lang)
-        stages,items,stageitems,formulas = self.penguin_stats(update=update)
-        self.prep_items(items)
+        print('FarmCalc.__init__',server,minimize_stage_key,lang)
+        stages,penguin_stats_items,stageitems,formulas = resource.penguin_stats(server,update=update)
+        self._item_table = resource.GameData.json_table('item', lang=self.lang2)
+        self.prep_penguin_stats_items(penguin_stats_items)
+        # self.prep_item_table()
         self.prep_stages(stages)
         self.prep_stages_stageitems(stageitems)
         self.prep_formulas(formulas)
         if minimize_stage_key: # san minClearTime
-            result = self.best_stages(server=self.server,minimize_stage_key=minimize_stage_key)
-            self.set_item_beststage(result)
+            self.result = self.best_stages(server=self.server,minimize_stage_key=minimize_stage_key)
+            self.set_item_beststage(self.result)
             self.minimize_stage_key=minimize_stage_key
-    def penguin_stats(self,update=False):
-        def _penguin_stats(name,query,server=''):
-            data=get_json(query,update)
-            file=f'./tmp/{name}{server}.json'
-            if (not os.path.isfile(file)) or update:
-                save_json(file,data)
-            return data
-        stages = _penguin_stats('stages',f'stages?server={self.server}',self.server)
-        items = _penguin_stats('items','items')
-        stageitems = _penguin_stats('stageitems','result/matrix?show_closed_zone=false')
-        stageitems_all = _penguin_stats('stageitems_all','result/matrix?show_closed_zone=true')
-        formulas = _penguin_stats('formulas','formula')
-        return stages,items,stageitems,formulas
-    def prep_items(self,items):
+    def prep_penguin_stats_items(self,items):
         for item in items:
             if item.get('existence').get(self.server).get('exist')==True and (item.get('itemType') not in FarmCalc.except_itemType):
                 itemId=item.get('itemId')
                 obj=ItemType(
                     name=item.get('name_i18n').get(self.lang),
                     id=itemId,
+                    # iconId=self._item_table.get('items',{}).get(itemId,{}).get('iconId','') or '',
                     rarity=item.get('rarity'),
                     itemType=item.get('itemType'),
                     groupID=item.get('groupID') or '',
-                    img_data=[],
                     beststage=[],
                 )
-                if (img_data:=FarmCalc.img_data.get(obj.id)):
-                    obj.img_data=img_data
                 self.items[itemId]=obj
-
+    def prep_item_table(self):
+        for itemId,item in self._item_table.get('items',{}).items():
+            if (item.get('itemType') not in FarmCalc.except_itemType):
+                itemId=item.get('itemId')
+                obj=ItemType(
+                    name=item.get('name'),
+                    id=itemId,
+                    rarity=resource.rarity_int(item.get('rarity')),
+                    itemType=item.get('itemType'),
+                    beststage=[],
+                )
+                self.items[itemId]=obj
     def prep_stages(self,stages):
-        stageinfos = anhrtags.GData.json_table('stage').get('stages',{})
+        stageinfos = resource.GameData.json_table('stage').get('stages',{})
         def dangerLevel(stageinfo):
             if (m:=re.match(r'Elite *(\d+) *Lv. *(\d+)',stageinfo.get('dangerLevel') or '')):
                 return float(f'{m.group(1)}.{m.group(2)}')
@@ -459,7 +393,9 @@ class FarmCalc():
                     d[itemId]=n
                 return np.array([n if (n:=d.get(itemtype.id)) else 0 for itemtype in self.items.values()])
             if isinstance(obj,Stage):
-                gold+=FarmCalc.stagecode_gold.get(obj.code,0)
+                if re.match(r'act\d+side',obj.zoneId):
+                    act_side_token=obj.san*1
+                gold+=FarmCalc.stagecode_gold.get(obj.code,1.2*10*obj.san)
                 return np.append(item_array(obj.outs),[exp,gold])
             elif isinstance(obj,Formula):
                 gold+=-obj.goldCost
@@ -478,9 +414,6 @@ class FarmCalc():
                 n=n,
             ) for itemId,n in req.items() if self.items.get(itemId)],
         )
-        # integrality=[1]*len(xkey)
-        # integrality=3
-        integrality=None
         args={
             'c':np.array([getattr(stage,minimize_stage_key) for stage in self.stages.values()] + [0 for formula in self.formulas.values()]),
             'A_ub':-np.array(
@@ -488,7 +421,7 @@ class FarmCalc():
                 [to_array(formula) for formula in self.formulas.values()]
             ).T,
             'b_ub':-to_array(req_),
-            'integrality':integrality, #1,3: very slow
+            'integrality':None, #1,3: very slow
             'A_eq':None, 'b_eq':None, 'bounds':(0, None), 'method':'highs', 'callback':None, 'options':None, 'x0':None #default
         }
         lp=linprog(**args)
@@ -496,10 +429,10 @@ class FarmCalc():
 
     def print_items(self):
         '''print req={}'''
-        items=sorted(list(self.items.values()),key=lambda i:(i.itemType,i.groupID,i.rarity,i.name,i.id))
-        print(*[f"""{' '*8}'{i.id}':100,{' '*(28-len(i.id))}#{i.name:<37}#{i.rarity} #{i.itemType}:{i.groupID}""" for i in items],sep='\n')
+        items=sorted(list(self.items.values()),key=lambda i:(i.itemType,i.rarity,i.name,i.id))
+        print(*[f"""{' '*8}'{i.id}':100,{' '*(28-len(i.id))}#{i.name:<37}#{i.rarity} #{i.itemType}""" for i in items],sep='\n')
 
-    @shelve_cache_clas('./tmp/farmcalc.calc_multi.cache')
+    @shelve_cache('./tmp/farmcalc.calc_multi.cache',ignore_first=True)
     def calc_multi(self,key):
         server,minimize_stage_key,itemid = key.split()
         stages_all=[]
@@ -507,10 +440,12 @@ class FarmCalc():
         i=10
         while i>0:
             i-=1
+            print('calc_multi',itemid)
             lp,args,req_=self.calc({itemid:1},test=True,minimize_stage_key=minimize_stage_key)
             if not lp.success:
                 break
             res_stage,res_formula,san=self.print_lp(lp,args,req_,p=False)
+            # res_stage,res_formula,san=self.print_lp(lp,args,req_,p=True)
             stages=[]
             if min_san==None:
                 min_san=san
@@ -523,14 +458,15 @@ class FarmCalc():
                     setattr(self.stages.get(stage.id),minimize_stage_key,getattr(self.stages.get(stage.id),minimize_stage_key)*1000)
                 else:
                     ce6=1
-            # if len(res_stage)>1+ce6:
-                # i=0
             if stages:
                 stages_all.append((stages,san))
         return stages_all
 
     @cache
     def best_stages(self,server,minimize_stage_key):
+        # from multiprocessing.dummy import Pool
+        # with Pool(7) as pool:
+            # for tags_,roi in pool.imap_unordered(_ocr_img, ROIs_raw):
         d={}
         for stageId,stage in self.stages.items():
             d[stageId]=getattr(stage,minimize_stage_key)
@@ -540,37 +476,22 @@ class FarmCalc():
         result={}
         count=1
         for itemid,v in self.items.items():
-            if v.itemType in ['CHIP','CARD_EXP','FURN','CHIP',] or itemid in ['3003',]:
+            if (v.itemType in ['CHIP','CARD_EXP','FURN','CHIP',] or itemid in ['3003',] 
+                    or v.groupID in ['skillbook','carbon',]
+                    # or itemid.startswith('p_char_')
+                    # or itemid.startswith('class_p_char_')
+                    # or itemid.startswith('tier')
+                    # or itemid.startswith('renamingCard')
+                    # or itemid.startswith('ap_supply_lt_')
+                    # or itemid.startswith('LIMITED_TKT_GACHA_')
+                    # or itemid.startswith('voucher_')
+                    ):
                 continue
             restore()
             stages_all=self.calc_multi(' '.join((server,minimize_stage_key,itemid)))
             if stages_all:
                 result[itemid]=stages_all
         return result
-
-    # @cache
-    # def best_stages(server=self.server,minimize_stage_key='san'):
-        # result={}
-        # s4=[]
-        # s5=[]
-        # count=1
-        # for itemid,v in self.items.items():
-            # lp,args,req_=calc({itemid:count},test=True,minimize_stage_key=minimize_stage_key)
-            # if lp.success:
-                # res_stage,res_formula,san=print_lp(lp,args,req_,p=False)
-                # beststage=[]
-                # for stage,n in res_stage:
-                    # if stage.id not in s4:
-                        # s4.append(stage.id)
-                        # s5.append(stage.id.replace('_perm',''))
-                    # if stage.code!='CE-6':
-                        # beststage.append(stage)
-                # if (item:=self.items.get(itemid)):
-                    # item.beststage=beststage
-                # result[itemid]=beststage
-            # else:
-                # print(itemid,lp)
-        # return s4,s5,minimize_stage_key,result
 
     def set_item_beststage(self,result):
         for itemid,beststage in result.items():
