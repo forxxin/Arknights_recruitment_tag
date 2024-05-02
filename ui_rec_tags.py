@@ -71,7 +71,6 @@ class UiResult(QtWidgets.QWidget):
             vlayout.addSpacerItem(QtWidgets.QSpacerItem(0, 0, vPolicy=QtWidgets.QSizePolicy.Policy.Expanding))
             return
         res = self.data.recruit(tags)
-        print(id(self.data.tags_result))
         layout = MyGridLayout()
         self.setLayout(layout)
         scroll = QtWidgets.QScrollArea(self)
@@ -253,7 +252,7 @@ class UiRecTag(QtWidgets.QMainWindow):
         self.view=None
         self.ui_tags = UiTagsSelect(self.data)
         self.add(self.ui_tags)
-        self.ui_tags.select(['Vanguard', 'Crowd-Control', 'DP-Recovery', 'Debuff', 'Healing'])
+        # self.ui_tags.select(['Vanguard', 'Crowd-Control', 'DP-Recovery', 'Debuff', 'Healing'])
         self.views={}
         self.create_worker(alltag)
         self.ui_tags.real_ok=self.set_view
