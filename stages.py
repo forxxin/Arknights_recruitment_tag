@@ -1,16 +1,18 @@
 from dataclasses import dataclass
 from functools import cache
 import re
+import os
 
 try:
-    import matplotlib.pyplot as plt
-    import matplotlib
     import pandas as pd 
 except Exception as e:
-    print(e)
+    print('import',type(e),e)
 
-import anhrtags
+import resource
 import farmcalc
+
+app_path = os.path.dirname(__file__)
+os.chdir(app_path)
 
 class Data:
     stages={}
@@ -50,7 +52,7 @@ def prep_stages():
             danger_level=danger_level(d.get('dangerLevel')),
             normaldrops=[],
             bestdrop='',
-        ) for stageId,d in anhrtags.GData.json_table('stage').get('stages',{}).items()}
+        ) for stageId,d in resource.GameData.json_table('stage').get('stages',{}).items()}
     stageid_tran={}
     bestdrop={}
     for itemid,stages_all in farmcalc.best_stages().items():
@@ -73,7 +75,7 @@ def prep_stages():
 
 @cache
 def zoneId2activityId():
-    return {stageId:activityId for stageId,activityId in anhrtags.GData.json_table('activity').get('zoneToActivity',{}).items()}
+    return {stageId:activityId for stageId,activityId in resource.GameData.json_table('activity').get('zoneToActivity',{}).items()}
 
 @dataclass
 class Activity:
@@ -89,7 +91,7 @@ def activitys():
         id = d.get('id'),
         name = d.get('name'),
         displayType = d.get('displayType'),
-    ) for activityId,d in anhrtags.GData.json_table('activity').get('basicInfo',{}).items()}
+    ) for activityId,d in resource.GameData.json_table('activity').get('basicInfo',{}).items()}
 
 def print_best(minimize_stage_key='san'):
     stageid_tran={}
@@ -111,7 +113,7 @@ def print_best(minimize_stage_key='san'):
             names=[f'{item.name}' for item in normaldrops] 
             return stage.code+f"""[{' '.join(names)}->{bestdrop.name}]{bestdrop.rarity}"""
     best_stages = [d for s,d in Data.stages.items() if d.id in stageid_tran]
-    activity_stages={activity.get('name'):[] for activityId, activity in anhrtags.GData.json_table('story_review').items()}
+    activity_stages={activity.get('name'):[] for activityId, activity in resource.GameData.json_table('story_review').items()}
     stageType_stages={}
     for stage in best_stages:
         activityId = zoneId2activityId().get(stage.zoneId)
