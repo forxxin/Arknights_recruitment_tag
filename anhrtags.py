@@ -23,16 +23,12 @@ try:
     import win32ui
     pytesseract.pytesseract.tesseract_cmd = os.path.abspath(r'../../Tesseract-OCR/tesseract.exe')
 except Exception as e:
-    print(e)
+    print('import',type(e),e)
     print("""
     #1 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
     #2 pip install --upgrade pywin32 pytesseract opencv-python
     #3 set pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'
     """)
-try:
-    import PyQt6.QtWidgets
-except Exception as e:
-    print(e)
 
 try:
     import mods.shellcmd1 as shellcmd
@@ -54,12 +50,12 @@ class TimeCost():
         if (not TimeCost.use) or (not self.__dict__.get('use',True)): return
         self.setname(name)
         self.start_time = time.time()
-    def end(self,name=''):
+    def end(self,name='',p=True):
         if (not TimeCost.use) or (not self.__dict__.get('use',True)): return
         self.setname(name)
         self.end_time = time.time()
         s = self.end_time - self.start_time
-        print(f"TimeCost {s:.3f}s {self.name}")
+        if p: print(f"TimeCost {s:.3f}s {self.name}")
         self.start_time = self.end_time
     def setname(self,name):
         if (not TimeCost.use) or (not self.__dict__.get('use',True)): return
@@ -487,7 +483,7 @@ def windows_image(img_anhrtags,queue,app_title='Arknights',border=False,scaled=T
         else:
             queue.put(None)
     except Exception as e:
-        print(e)
+        print('windows_image',type(e),e)
         queue.put(None)
 
 def resize(image, width=None, height=None):
@@ -655,7 +651,7 @@ def adb_tag(img_anhrtags,setup=False):
         try:
             adev = shellcmd.AndroidDev(adev_name, adb_tcpip=False) # adb wireless
         except Exception as e:
-            print('adb_tag',e)
+            print('adb_tag',type(e),e)
             adev=None
         if isinstance(adev,shellcmd.AndroidDev):
             img = adev.screencap(name1=img_anhrtags,open_img=False)
@@ -725,7 +721,7 @@ def ui_hr_tag(tags=[]):
                     try:
                         command()
                     except Exception as e:
-                        print(e)
+                        print('ui_hr_tag',type(e),e)
                     real_on_click.btn.config(state=tk.NORMAL)
                 def on_click():
                     if not (getattr(on_click,'timer',None) and on_click.timer.is_alive()): #prevent call twice
