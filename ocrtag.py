@@ -22,7 +22,7 @@ except:
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 pytesseract.pytesseract.tesseract_cmd = os.path.abspath(r'../../Tesseract-OCR/tesseract.exe')
-SAVE_ROIIMG=False
+SAVE_ROIIMG=True
 
 def windows_image(img_anhrtags,app_title='Arknights',border=False,scaled=True):
     from ctypes import windll
@@ -65,7 +65,7 @@ def windows_image(img_anhrtags,app_title='Arknights',border=False,scaled=True):
             # img.save(img_anhrtags)
             return img
     except Exception as e:
-        print(e)
+        print('windows_image',type(e),e)
 
 def windows_image_process(img_anhrtags,queue,app_title='Arknights',border=False,scaled=True):
     img = windows_image(img_anhrtags,app_title=app_title,border=border,scaled=scaled)
@@ -203,30 +203,41 @@ def ocr_img(alltag,img,roi):
     x,y,w,h=roi
     img_crop=img[y:y+h,x:x+w]
     tag_ocrs = pytesseract.image_to_string(img_crop)
-    tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS')
+    tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS').replace('pps','DPS')
     taglow_tag = {tag.lower():tag for tag in sorted(alltag, key=len, reverse=True)}
     print(tag_ocrs.strip())
     tags=[]
     for tag_ocr in tag_ocrs.lower().split():
         for taglow,tag in taglow_tag.items():
+            taglow=taglow.split(' ')[0]
             if taglow in tag_ocr:
                 tags.append(tag)
                 break
     if tags and SAVE_ROIIMG:
         save_img(f"tmp/ocr_img/{'_'.join(tags)}_{int(time.time())}.png",img_crop)
     return tags
-
+last_adev=None
 def adb_tag(alltag,img_anhrtags,setup=False):
     def _adb_tag(adev_name=''):
+        global last_adev
         try:
-            adev = shellcmd.AndroidDev(adev_name, adb_tcpip=False) # adb wireless
+            if last_adev:
+                adev = last_adev
+            else:
+                adev = shellcmd.AndroidDev(adev_name, adb_tcpip=False) # adb wireless
         except Exception as e:
-            print('adb_tag',e)
+            print('adb_tag',type(e),e)
             adev=None
         if isinstance(adev,shellcmd.AndroidDev):
             img = adev.screencap(name1=img_anhrtags,open_img=False)
             if img:
-                return img_tag(alltag,img,setup=setup)
+                tags = img_tag(alltag,img,setup=setup)
+                if tags:
+                    last_adev = adev
+                    return tags
+            last_adev=None
+            return []
+            
     tags = _adb_tag()
     if tags:
         return tags
