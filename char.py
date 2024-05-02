@@ -1,18 +1,11 @@
 from dataclasses import dataclass
 from itertools import combinations
-import json
 import pprint
 import os
-import re
 
 import pandas as pd
 
-import anhrtags
-from anhrtags import GData,TimeCost
-try:
-    import mods.shellcmd1 as shellcmd
-except:
-    import shellcmd1 as shellcmd
+import resource
 
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
@@ -22,37 +15,6 @@ try:
 except:
     def dump(**a):
         pass
-
-# class Data:
-    # server='US'
-    # lang='en'
-    # lang2={'en':'en_US','ja':'ja_JP','ko':'ko_KR','zh':'zh_CN','ch':'zh_TW',}
-    # rarity_color={6:'darkorange', 5:'gold', 4:'plum', 3:'deepskyblue', 2:'lightyellow', 1:'lightgrey', }
-    # itemObtainApproach_recruit='Recruitment & Headhunting'
-    # chars={}
-    # tag_rarity={}
-    # tags_result={}
-    # all_tags=[]
-    # url_agr = 'https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/main/'
-    # name_avatar = 'avatar/{charid}.png'
-    # name_avatar2 = 'avatar/{charid}_2.png'
-    # name_portrait = 'portrait/{charid}_1.png'
-    # name_portrait2 = 'portrait/{charid}_2.png'
-
-    # position_tagId = {
-            # "RANGED": 10,
-            # "MELEE": 9,
-    # }
-    # profession_tagId = {
-            # "WARRIOR": 1,
-            # "SNIPER": 2,
-            # "TANK": 3,
-            # "MEDIC": 4,
-            # "SUPPORT": 5,
-            # "CASTER": 6,
-            # "SPECIAL": 7,
-            # "PIONEER": 8,
-    # }
 
 @dataclass
 class Character:
@@ -131,11 +93,11 @@ def subset(items,maxtag=5,self=0):
             yield frozenset(s)
 
 class Chars:
-    url_agr = 'https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/main/'
-    name_avatar = 'avatar/{charid}.png'
-    name_avatar2 = 'avatar/{charid}_2.png'
-    name_portrait = 'portrait/{charid}_1.png'
-    name_portrait2 = 'portrait/{charid}_2.png'
+    # url_agr = 'https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/main/'
+    # name_avatar = 'avatar/{charid}.png'
+    # name_avatar2 = 'avatar/{charid}_2.png'
+    # name_portrait = 'portrait/{charid}_1.png'
+    # name_portrait2 = 'portrait/{charid}_2.png'
     position_tagId = {
             "RANGED": 10,
             "MELEE": 9,
@@ -150,11 +112,11 @@ class Chars:
             "SPECIAL": 7,
             "PIONEER": 8,
     }
-    lang2={'en':'en_US','ja':'ja_JP','ko':'ko_KR','zh':'zh_CN','ch':'zh_TW',}
     rarity_color={6:'darkorange', 5:'gold', 4:'plum', 3:'deepskyblue', 2:'lightyellow', 1:'lightgrey', }
     def __init__(self,server='US',lang='en'):
         self.server=server #US CN JP KR
         self.lang=lang #en ja ko zh
+        self.lang2=resource.lang2(self.lang)
         # self.server='CN' #US CN JP KR
         # self.lang='zh' #en ja ko zh
         print('Chars.__init__',server,lang)
@@ -168,9 +130,8 @@ class Chars:
         self.prep_chars_excel()
     def prep_chars(self):
         self.chars={}
-        lang2=Chars.lang2.get(self.lang)
-        character_table = GData.json_table('character', lang=lang2)  # 'zh_CN'
-        gacha_table = GData.json_table('gacha', lang=lang2)  # 'zh_CN'
+        character_table = resource.GameData.json_table('character', lang=self.lang2)  # 'zh_CN'
+        gacha_table = resource.GameData.json_table('gacha', lang=self.lang2)  # 'zh_CN'
         tagsid_name = {tag.get('tagId'):tag.get('tagName') for tag in gacha_table.get('gachaTags')}
         tag_profession = set()
         tag_position = set()
@@ -188,18 +149,16 @@ class Chars:
             tags.append(profession_name)
             tags.append(position_name)
             return frozenset(tags)
-        def gen_rarity(char_data):
-            return int(char_data.get('rarity')[-1:])
-        def gen_img(url_raw,char_id):
-            file = url_raw.format(charid=char_id)
-            url = Chars.url_agr + file
-            return GData.img(file,url)
+        # def gen_rarity(char_data):
+            # return int(char_data.get('rarity')[-1:])
+        def gen_img(name_url,char_id):
+            return resource.CharImg.img(char_id,name_url)
         def recruitable(char_id):
             if self.server=='CN':
-                if GData.json_tl('akhr').get(char_id) and GData.json_tl('akhr').get(char_id,{}).get('hidden')!=True:
+                if resource.json_tl('akhr').get(char_id) and resource.json_tl('akhr').get(char_id,{}).get('hidden')!=True:
                     return True
             else:
-                if GData.json_tl('akhr').get(char_id) and GData.json_tl('akhr').get(char_id,{}).get('globalHidden')!=True:
+                if resource.json_tl('akhr').get(char_id) and resource.json_tl('akhr').get(char_id,{}).get('globalHidden')!=True:
                     return True
             return False
         for char_id,char_data in character_table.items():
@@ -215,11 +174,11 @@ class Chars:
                 subProfessionId=char_data.get('subProfessionId'),
                 position=char_data.get('position'),
                 tags=gen_tags(char_data),
-                rarity=gen_rarity(char_data),
-                avatar=gen_img(Chars.name_avatar,char_id),
-                # avatar2=gen_img(Chars.name_avatar2,char_id),
-                # portrait=gen_img(Chars.name_portrait,char_id),
-                # portrait2=gen_img(Chars.name_portrait2,char_id),
+                rarity=resource.rarity_int(char_data.get('rarity')),
+                avatar=gen_img(resource.CharImg.name_avatar,char_id),
+                # avatar2=gen_img(resource.CharImg.name_avatar2,char_id),
+                # portrait=gen_img(resource.CharImg.name_portrait,char_id),
+                # portrait2=gen_img(resource.CharImg.name_portrait2,char_id),
                 itemObtainApproach=char_data.get('itemObtainApproach') or '',
                 recruitable=recruitable(char_id),
             )
@@ -245,7 +204,7 @@ class Chars:
             if len(tags)==1:
                 self.tag_rarity[next(iter(tags))]=m
         self.all_tags=[sorted(list(tag_sub),key=lambda tag:(self.tag_rarity.get(tag),tag)) for tag_sub in self.all_tags]
-
+        self.all_tags+=[['Senior Operator','Top Operator']]
     def sort_result(self,res):
         return {k:v for k,v in sorted(res.items(), key=lambda item:item[1]['rarity'],reverse=True)}
 
