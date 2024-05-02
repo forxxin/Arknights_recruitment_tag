@@ -1,10 +1,16 @@
 import dataclasses
-import anhrtags
+from functools import cache
+import os
+
 import matplotlib.pyplot as plt
 import matplotlib
-from functools import cache
 
-gamedata = anhrtags.GData.json_data('gamedata',lang='zh_CN')
+import resource
+
+app_path = os.path.dirname(__file__)
+os.chdir(app_path)
+
+gamedata = resource.GameData.json_data('gamedata',lang='zh_CN')
 def cost(rarity=6,level=90,evolve=2):
     if isinstance(rarity,str):
         rarity=int(rarity[-1:])
@@ -110,8 +116,8 @@ def plot(count=None):
     for rarity,y in enumerate(ys):
         if y:
             y1,y2=y
-            ax.scatter(range(len(y1)),y1,s=1,color=anhrtags.colors.get(rarity,'black'))
-            ax1.scatter(range(len(y2)),y2,s=1,color=anhrtags.colors.get(rarity,'black'))
+            ax.scatter(range(len(y1)),y1,s=1,color=resource.colors.get(rarity,'black'))
+            ax1.scatter(range(len(y2)),y2,s=1,color=resource.colors.get(rarity,'black'))
     def config(ax,fig,title):
         ax.set_xticks(range(len(x)))
         ax.set_xticklabels([str(item) for item in x])
