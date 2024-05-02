@@ -50,7 +50,7 @@ class UiRoot(QtWidgets.QMainWindow):
         self.ui_recrs[self.ui_recr_key]=ui_recr
         self.tabs.currentChanged.connect(self.set_tab1)
     def update_ui(self,event):
-        print('update_ui')
+        # print('update_ui')
         self.ui_farm.set_view(self.ui_args.args_farm())
     def closeEvent(self,event):
         self.save_pos()
@@ -164,7 +164,7 @@ class UiArgs(QtWidgets.QWidget):
     def args(self):
         return {name:comb.currentText() for name,comb in self.combs.items()}
     def args_farm(self):
-        return {name:comb.currentText() for name,comb in self.combs.items() if name in ['server','minimize_stage_key','lang']}
+        return {name:comb.currentText() for name,comb in self.combs.items() if name in ['server','minimize_stage_key','lang','show']}
     def args_recr(self):
         return {name:comb.currentText() for name,comb in self.combs.items() if name in ['server','lang']}
     def save_pos(self):
