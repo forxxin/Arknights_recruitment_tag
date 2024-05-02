@@ -2,7 +2,7 @@
 ```python ui_qt.pyw```
 ![screenshot](screenshot/tag.png)
 
-## arknights best farm stage (2024-4-23)
+## arknights best farm stage (2024-5-3)
 ```python ui_qt.pyw```
 ![screenshot](screenshot/farm.png)
 
