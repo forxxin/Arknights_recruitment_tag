@@ -5,7 +5,7 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 
 from qtlayout import MyGridLayout,MyVBoxLayout,MyHBoxLayout
 from farmcalc import FarmCalc
-import anhrtags
+import resource
 try:
     import saveobj
 except:
@@ -13,7 +13,220 @@ except:
 
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
-
+UiGraphicsView_default_d = {
+        "30064": [
+            7,
+            1
+        ],
+        "31063": [
+            125,
+            3
+        ],
+        "31013": [
+            72,
+            4
+        ],
+        "31044": [
+            115,
+            1
+        ],
+        "30042": [
+            43,
+            4
+        ],
+        "30052": [
+            26,
+            4
+        ],
+        "31084": [
+            138,
+            2
+        ],
+        "30063": [
+            15,
+            3
+        ],
+        "30044": [
+            48,
+            1
+        ],
+        "30054": [
+            34,
+            1
+        ],
+        "30014": [
+            61,
+            1
+        ],
+        "30051": [
+            26,
+            5
+        ],
+        "30125": [
+            7,
+            0
+        ],
+        "31053": [
+            135,
+            3
+        ],
+        "30033": [
+            34,
+            3
+        ],
+        "31064": [
+            131,
+            1
+        ],
+        "30115": [
+            32,
+            0
+        ],
+        "30073": [
+            70,
+            3
+        ],
+        "31033": [
+            85,
+            4
+        ],
+        "30031": [
+            35,
+            5
+        ],
+        "31083": [
+            123,
+            4
+        ],
+        "30024": [
+            39,
+            2
+        ],
+        "30012": [
+            52,
+            4
+        ],
+        "30084": [
+            86,
+            1
+        ],
+        "30013": [
+            52,
+            3
+        ],
+        "30145": [
+            92,
+            0
+        ],
+        "31073": [
+            112,
+            4
+        ],
+        "31014": [
+            67,
+            2
+        ],
+        "30043": [
+            43,
+            3
+        ],
+        "30061": [
+            16,
+            5
+        ],
+        "30103": [
+            61,
+            3
+        ],
+        "30074": [
+            20,
+            1
+        ],
+        "31074": [
+            112,
+            2
+        ],
+        "30032": [
+            35,
+            4
+        ],
+        "30021": [
+            7,
+            5
+        ],
+        "31024": [
+            98,
+            2
+        ],
+        "30093": [
+            99,
+            3
+        ],
+        "31043": [
+            112,
+            3
+        ],
+        "31023": [
+            78,
+            3
+        ],
+        "30022": [
+            7,
+            4
+        ],
+        "30062": [
+            16,
+            4
+        ],
+        "30041": [
+            43,
+            5
+        ],
+        "30083": [
+            89,
+            3
+        ],
+        "30104": [
+            73,
+            1
+        ],
+        "30094": [
+            100,
+            1
+        ],
+        "31034": [
+            81,
+            2
+        ],
+        "31054": [
+            124,
+            2
+        ],
+        "30135": [
+            60,
+            0
+        ],
+        "30155": [
+            117,
+            0
+        ],
+        "30023": [
+            7,
+            3
+        ],
+        "30034": [
+            17,
+            2
+        ],
+        "30011": [
+            52,
+            5
+        ],
+        "30053": [
+            26,
+            3
+        ]
+    }
 class UiFarmStageWorker(QtCore.QObject):
     init_farmstage3 = QtCore.pyqtSignal(tuple,FarmCalc)
     def __init__(self, parent=None):
@@ -31,7 +244,7 @@ class UiFarmStage(QtWidgets.QWidget):
         self.view=None
         self.create_worker()
         self.vlayout = MyVBoxLayout()
-        UiGraphicsView.init_ysd()
+        UiGraphicsView.init_ysd(args.get('show'))
         self.set_view(args)
         self.setLayout(self.vlayout)
     def create_worker(self):
@@ -85,18 +298,26 @@ class UiFarmStage(QtWidgets.QWidget):
     def farmcalc_view(self,key,data):
         view= UiGraphicsView(key)
         imgitems={}
-        for itemId,item in data.items.items():
-            if item.img_data:
+        itemids = set(data.result.keys())
+        for formulaId,formula in data.formulas.items():
+            for item in formula.ins:
+                for item_out in formula.out:
+                    itemids.add(item.item.id)
+                    itemids.add(item_out.item.id)
+        for itemId in itemids:
+            item = data.items.get(itemId)
+            if resource.ItemImg.img(item.id):
                 imgitem = UiItemImg(item)
                 imgitems[item.id]=imgitem
         arrowcolor = self.getcolor()
         for formulaId,formula in data.formulas.items():
             for item in formula.ins:
-                for item1 in formula.out:
+                for item_out in formula.out:
                     imgitem = imgitems.get(item.item.id)
-                    imgitem1 = imgitems.get(item1.item.id)
+                    imgitem1 = imgitems.get(item_out.item.id)
+                    n=item.n/item_out.n
                     if imgitem and imgitem1:
-                        arrow=UiFormulaArrow(imgitem,imgitem1,arrowcolor[formula.id])
+                        arrow=UiFormulaArrow(imgitem,imgitem1,arrowcolor[formula.id],n)
                         view.addarrow(arrow)
         for imgitem in imgitems.values():
             view.addimg(imgitem)
@@ -152,10 +373,41 @@ class UiStageSelect(QtWidgets.QDialog):
                 self.layout.addWidget(check,row,col)
                 col+=1
 
-def img_data2file(img_data):
-    for name in img_data:
-        url = FarmCalc.url_material + name
-        yield anhrtags.GData.img(name,url)
+class UiItemImg1(QtWidgets.QGraphicsItem):
+    n=3
+    len=80
+    len1=66
+    wordlen=11
+    def __init__(self, item, parent=None):
+        super(UiItemImg, self).__init__(parent)
+        self.x=0
+        self.y=0
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+        self.item = item
+        self.beststages = [([stage.code for stage in stages],san) for stages,san in self.item.beststage]
+        self.strs = []
+        for idx,(stages,san) in enumerate(self.beststages):
+            s=f"""[{', '.join(stages)}] {round(san,1):g}"""
+            if s not in self.strs:
+                self.strs.append(s)
+        self.pixmaps = []
+        file,file1 = resource.ItemImg1.img(item.id)
+        self.pixmaps.append(QtGui.QPixmap(file).scaled(UiItemImg.len,UiItemImg.len,aspectRatioMode=QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=QtCore.Qt.TransformationMode.SmoothTransformation))
+        self.pixmaps.append(QtGui.QPixmap(file1).scaled(UiItemImg.len1,UiItemImg.len1,aspectRatioMode=QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=QtCore.Qt.TransformationMode.SmoothTransformation))
+    def paint(self, painter, option, widget):
+        pixmap,pixmap1 = self.pixmaps
+        x=int((UiItemImg.len-UiItemImg.len1)/2)
+        painter.drawPixmap(0,0,pixmap)
+        painter.drawPixmap(pixmap.rect().center()-pixmap1.rect().center(),pixmap1)
+        painter.drawText(0,UiItemImg.len+UiItemImg.wordlen,self.item.name)
+        for idx,s in enumerate(self.strs):
+            if idx>=int(UiItemImg.n):
+                if not self.isSelected():
+                    break
+            painter.drawText(0,UiItemImg.len+UiItemImg.wordlen*(2+idx),s)
+    def boundingRect(self):
+        return QtCore.QRectF(0,0,UiItemImg.len,UiItemImg.len)
 
 class UiItemImg(QtWidgets.QGraphicsItem):
     n=3
@@ -175,15 +427,11 @@ class UiItemImg(QtWidgets.QGraphicsItem):
             s=f"""[{', '.join(stages)}] {round(san,1):g}"""
             if s not in self.strs:
                 self.strs.append(s)
-        self.pixmaps = []
-        file,file1 = img_data2file(item.img_data)
-        self.pixmaps.append(QtGui.QPixmap(file).scaled(UiItemImg.len,UiItemImg.len,aspectRatioMode=QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=QtCore.Qt.TransformationMode.SmoothTransformation))
-        self.pixmaps.append(QtGui.QPixmap(file1).scaled(UiItemImg.len1,UiItemImg.len1,aspectRatioMode=QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=QtCore.Qt.TransformationMode.SmoothTransformation))
+        file = resource.ItemImg.img(item.id)
+        self.pixmap = QtGui.QPixmap(file).scaled(UiItemImg.len,UiItemImg.len,aspectRatioMode=QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=QtCore.Qt.TransformationMode.SmoothTransformation)
     def paint(self, painter, option, widget):
-        pixmap,pixmap1 = self.pixmaps
         x=int((UiItemImg.len-UiItemImg.len1)/2)
-        painter.drawPixmap(0,0,pixmap)
-        painter.drawPixmap(pixmap.rect().center()-pixmap1.rect().center(),pixmap1)
+        painter.drawPixmap(0,0,self.pixmap)
         painter.drawText(0,UiItemImg.len+UiItemImg.wordlen,self.item.name)
         for idx,s in enumerate(self.strs):
             if idx>=int(UiItemImg.n):
@@ -232,7 +480,8 @@ class UiGraphicsView(QtWidgets.QGraphicsView):
             self.update()
         return super().mouseReleaseEvent(event)
     @staticmethod
-    def init_ysd():
+    def init_ysd(n):
+        UiItemImg.n=int(n)
         UiGraphicsView.ysd=UiItemImg.len+UiItemImg.wordlen*(1+int(UiItemImg.n))
     def update_ysd(self):
         UiGraphicsView.ysd=UiItemImg.len+UiItemImg.wordlen*(1+int(UiItemImg.n))
@@ -257,7 +506,7 @@ class UiGraphicsView(QtWidgets.QGraphicsView):
         ds=saveobj.load_json(self.config) or {}
         d=ds.get(self.key)
         if not d:
-            d = {"30011":[45,5],"30012":[45,4],"30013":[45,3],"30014":[54,1],"30061":[0,5],"30062":[0,4],"30063":[0,3],"30064":[0,1],"30031":[10,5],"30032":[10,4],"30033":[10,3],"30034":[10,2],"30021":[27,5],"30022":[27,4],"30023":[27,3],"30024":[32,2],"30041":[36,5],"30042":[36,4],"30043":[36,3],"30044":[41,1],"30051":[19,5],"30052":[19,4],"30053":[19,3],"30054":[27,1],"30073":[63,3],"30074":[13,1],"30083":[82,3],"30084":[79,1],"30093":[91,3],"30094":[93,1],"30103":[54,3],"30104":[66,1],"31013":[65,4],"31014":[60,2],"31023":[71,3],"31024":[88,2],"30115":[41,0],"30125":[12,0],"30135":[73,0],"31033":[78,4],"31034":[74,2]}
+            d = UiGraphicsView_default_d
         if d:
             for img in self.imgs:
                 if (p:=d.get(img.item.id)):
@@ -269,11 +518,12 @@ class UiGraphicsView(QtWidgets.QGraphicsView):
         self.save_pos()
 
 class UiFormulaArrow(QtWidgets.QGraphicsItem):
-    def __init__(self, startItem, endItem,color, parent=None, scene=None):
+    def __init__(self, startItem, endItem,color,n, parent=None, scene=None):
         super(UiFormulaArrow, self).__init__()
         self.startItem = startItem
         self.endItem = endItem
         self.color=color
+        self.n=n
     def boundingRect(self):
         p1 = self.startItem.pos() + self.startItem.boundingRect().center()
         p3 = self.endItem.pos() + self.endItem.boundingRect().center()
@@ -287,12 +537,13 @@ class UiFormulaArrow(QtWidgets.QGraphicsItem):
         pen.setColor(QtGui.QColor(self.color)) #https://doc.qt.io/qtforpython-5/PySide2/QtGui/QColorConstants.html
         painter.setPen(pen)
         painter.drawLine(QtCore.QLineF(p1, p3))
+        painter.drawText((p1+p3)/2,f'{self.n:g}')
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     root = QtWidgets.QMainWindow()
     root.setWindowTitle(f"best stages")
-    ui=UiFarmStage({'server':'US','minimize_stage_key':'san','lang':'en'})
+    ui=UiFarmStage({'server':'US','minimize_stage_key':'san','lang':'en','show':'1'})
     root.setCentralWidget(ui)
     root.show()
     ret = app.exec()
