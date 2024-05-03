@@ -227,10 +227,11 @@ UiGraphicsView_default_d = {
             3
         ]
     }
+
 class UiFarmStageWorker(QtCore.QObject):
     init_farmstage3 = QtCore.pyqtSignal(tuple,FarmCalc)
-    def __init__(self, parent=None):
-        super(self.__class__, self).__init__(parent)
+    def __init__(self,parent=None):
+        super().__init__(parent)
     @QtCore.pyqtSlot(tuple,dict)
     def init_farmstage2(self,key,args):
         data=FarmCalc(**args)
@@ -238,8 +239,8 @@ class UiFarmStageWorker(QtCore.QObject):
 
 class UiFarmStage(QtWidgets.QWidget):
     init_farmstage1 = QtCore.pyqtSignal(tuple,dict)
-    def __init__(self,args):
-        super(UiFarmStage, self).__init__()
+    def __init__(self,args,parent=None):
+        super().__init__(parent)
         self.views={}
         self.view=None
         self.create_worker()
@@ -345,41 +346,42 @@ class UiFarmStage(QtWidgets.QWidget):
         self.close_worker()
         for view in self.views.values():
             view.close()
-class UiStageSelect(QtWidgets.QDialog):
-    def __init__(self):
-        super(UiStageSelect, self).__init__()
-        layout=MyVBoxLayout()
-        scroll = QtWidgets.QScrollArea(self)
-        scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        scroll.setWidgetResizable(True)
-        widget = QtWidgets.QWidget()
-        self.layout = MyGridLayout()
-        self.setLayout(layout)
-        layout.addWidget(scroll)
-        scroll.setWidget(widget)
-        widget.setLayout(self.layout)
-        stagebyzone={}
-        for stage in farmcalc.Data.stages.values():
-            stagebyzone.setdefault(stage.zoneId,[]).append(stage)
-        row=-1
-        for zoneId,stages in stagebyzone.items():
-            check_all = QtWidgets.QCheckBox(zoneId)
-            row+=1
-            self.layout.addWidget(check_all,row,0)
-            col=1
-            for stage in stages:
-                check = QtWidgets.QCheckBox(stage.code)
-                self.layout.addWidget(check,row,col)
-                col+=1
+
+# class UiStageSelect(QtWidgets.QDialog):
+    # def __init__(self,parent=None):
+        # super().__init__(parent)
+        # layout=MyVBoxLayout()
+        # scroll = QtWidgets.QScrollArea(self)
+        # scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        # scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        # scroll.setWidgetResizable(True)
+        # widget = QtWidgets.QWidget()
+        # self.layout = MyGridLayout()
+        # self.setLayout(layout)
+        # layout.addWidget(scroll)
+        # scroll.setWidget(widget)
+        # widget.setLayout(self.layout)
+        # stagebyzone={}
+        # for stage in farmcalc.Data.stages.values():
+            # stagebyzone.setdefault(stage.zoneId,[]).append(stage)
+        # row=-1
+        # for zoneId,stages in stagebyzone.items():
+            # check_all = QtWidgets.QCheckBox(zoneId)
+            # row+=1
+            # self.layout.addWidget(check_all,row,0)
+            # col=1
+            # for stage in stages:
+                # check = QtWidgets.QCheckBox(stage.code)
+                # self.layout.addWidget(check,row,col)
+                # col+=1
 
 class UiItemImg1(QtWidgets.QGraphicsItem):
     n=3
     len=80
     len1=66
     wordlen=11
-    def __init__(self, item, parent=None):
-        super(UiItemImg, self).__init__(parent)
+    def __init__(self, item,parent=None):
+        super().__init__(parent)
         self.x=0
         self.y=0
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
@@ -414,8 +416,8 @@ class UiItemImg(QtWidgets.QGraphicsItem):
     len=80
     len1=66
     wordlen=11
-    def __init__(self, item, parent=None):
-        super(UiItemImg, self).__init__(parent)
+    def __init__(self, item,parent=None):
+        super().__init__(parent)
         self.x=0
         self.y=0
         self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
@@ -444,8 +446,8 @@ class UiItemImg(QtWidgets.QGraphicsItem):
 class UiGraphicsView(QtWidgets.QGraphicsView):
     xsd=10
     ysd=UiItemImg.len+UiItemImg.wordlen*(1+UiItemImg.n)
-    def __init__(self,key):
-        super(UiGraphicsView, self).__init__()
+    def __init__(self,key,parent=None):
+        super().__init__(parent)
         self.key=' '.join(key)
         self.scene = QtWidgets.QGraphicsScene()
         self.setScene(self.scene)
@@ -518,8 +520,8 @@ class UiGraphicsView(QtWidgets.QGraphicsView):
         self.save_pos()
 
 class UiFormulaArrow(QtWidgets.QGraphicsItem):
-    def __init__(self, startItem, endItem,color,n, parent=None, scene=None):
-        super(UiFormulaArrow, self).__init__()
+    def __init__(self, startItem, endItem,color,n,parent=None):
+        super().__init__(parent)
         self.startItem = startItem
         self.endItem = endItem
         self.color=color
