@@ -1,10 +1,8 @@
-## arknights recruit tag (2024-4-23)
-```python ui_qt.pyw```
-![screenshot](screenshot/tag.png)
 
-## arknights best farm stage (2024-5-3)
-```python ui_qt.pyw```
+## ```python ui_qt.pyw```
 ![screenshot](screenshot/farm.png)
+![screenshot](screenshot/event_store_priority.png)
+![screenshot](screenshot/tag.png)
 
 ## arknights side story to unlock (2024-4-23)
 ### by drop 
