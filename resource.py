@@ -47,8 +47,6 @@ def download(name,url,update=False):
             # urllib.request.urlretrieve(url, file)
     return file
 
-
-
 @cache
 def json_tl(name):
     url = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/tl-{name}.json'
