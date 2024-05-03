@@ -51,7 +51,8 @@ class AndroidDev():
                 if break_err:
                     break
         return result
-        
+
+    @staticmethod
     def pair(android_ip_pair):
         cmds=f"""
         {adb} pair {android_ip_pair}
@@ -74,11 +75,13 @@ class AndroidDev():
             time.sleep(1)
         print()
             
+    @staticmethod
     def adb_kill():
         AndroidDev.adb_env['ADB_MDNS_OPENSCREEN']='1'
         cmd=f"""{adb} kill-server"""
         result = AndroidDev.runs(None, cmd,hidecmd=True, print_out=False, break_err=False)
         
+    @staticmethod
     def adb_mdns(retry=3):
         AndroidDev.adb_env['ADB_MDNS_OPENSCREEN']='1'
         re_adb_mdns=r'''^(?P<device_id>.*?)\s+(?P<device_mdns>.*?)\s+(?P<device_ip>.*)'''
@@ -113,6 +116,7 @@ class AndroidDev():
             else:
                 return {}
 
+    @staticmethod
     def adb_devices():
         re_adb_devices=r'''^(?P<device_id>.*?)\s+(?P<status>.*?)\s+(?P<info>.*)'''
         cmd=f"""{adb} devices -l"""
@@ -131,6 +135,7 @@ class AndroidDev():
                     AndroidDev.devices.setdefault(mobj.group('device_id'), {})['info'] = mobj.group('info')
         return AndroidDev.devices
     
+    @staticmethod
     def connected(device_id):
         if AndroidDev.adb_devices().get(device_id,{}).get('status') == 'device':
             return True
