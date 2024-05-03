@@ -1,7 +1,7 @@
 
 ## ```python ui_qt.pyw```
 ![screenshot](screenshot/farm.png)
-#### Herbstmondeskonzert
+#### Herbstmondeskonzert store priority
 ![screenshot](screenshot/event_store_priority.png)
 ![screenshot](screenshot/tag.png)
 
