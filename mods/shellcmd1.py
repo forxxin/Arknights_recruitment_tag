@@ -7,9 +7,9 @@ import pprint
 import re
 import time
 try:
-    import mods.myprocess1 as myprocess
+    import myprocess as myprocess
 except:
-    import myprocess1 as myprocess
+    import mods.myprocess1 as myprocess
     
 adb = 'adb'
 _tmpdir='/data/local/tmp/'
