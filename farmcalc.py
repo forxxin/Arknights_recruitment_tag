@@ -224,13 +224,14 @@ class FarmCalc():
         self.lang=lang #en ja ko zh
         self.lang2=resource.lang2(self.lang)
         self.items={}
+        self.items_all={}
         self.stages={}
         self.formulas={}
         print('FarmCalc.__init__',server,minimize_stage_key,lang)
         stages,penguin_stats_items,stageitems,formulas = resource.penguin_stats(server,update=update)
         self._item_table = resource.GameData.json_table('item', lang=self.lang2)
         self.prep_penguin_stats_items(penguin_stats_items)
-        # self.prep_item_table()
+        self.prep_item_table()
         self.prep_stages(stages)
         self.prep_stages_stageitems(stageitems)
         self.prep_formulas(formulas)
@@ -261,9 +262,10 @@ class FarmCalc():
                     id=itemId,
                     rarity=resource.rarity_int(item.get('rarity')),
                     itemType=item.get('itemType'),
+                    groupID='',
                     beststage=[],
                 )
-                self.items[itemId]=obj
+                self.items_all[itemId]=obj
     def prep_stages(self,stages):
         stageinfos = resource.GameData.json_table('stage').get('stages',{})
         def dangerLevel(stageinfo):
@@ -441,7 +443,11 @@ class FarmCalc():
         while i>0:
             i-=1
             print('calc_multi',itemid)
-            lp,args,req_=self.calc({itemid:1},test=True,minimize_stage_key=minimize_stage_key)
+            if itemid in ['gold','exp']:
+                n=100000
+            else:
+                n=1
+            lp,args,req_=self.calc({itemid:n},test=True,minimize_stage_key=minimize_stage_key)
             if not lp.success:
                 break
             res_stage,res_formula,san=self.print_lp(lp,args,req_,p=False)
@@ -453,13 +459,17 @@ class FarmCalc():
                 break
             ce6=0
             for stage,count in res_stage:
-                if stage.code!='CE-6':
+                if itemid=='gold':
                     stages.append(stage)
                     setattr(self.stages.get(stage.id),minimize_stage_key,getattr(self.stages.get(stage.id),minimize_stage_key)*1000)
                 else:
-                    ce6=1
+                    if stage.code!='CE-6':
+                        stages.append(stage)
+                        setattr(self.stages.get(stage.id),minimize_stage_key,getattr(self.stages.get(stage.id),minimize_stage_key)*1000)
+                    else:
+                        ce6=1
             if stages:
-                stages_all.append((stages,san))
+                stages_all.append((stages,san/n))
         return stages_all
 
     @cache
@@ -491,6 +501,11 @@ class FarmCalc():
             stages_all=self.calc_multi(' '.join((server,minimize_stage_key,itemid)))
             if stages_all:
                 result[itemid]=stages_all
+        # for itemid in ['gold','exp']:
+            # restore()
+            # stages_all=self.calc_multi(' '.join((server,minimize_stage_key,itemid)))
+            # if stages_all:
+                # result[itemid]=stages_all
         return result
 
     def set_item_beststage(self,result):
