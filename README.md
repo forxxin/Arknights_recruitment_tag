@@ -5,6 +5,8 @@
 ![screenshot](screenshot/event_store_priority.png)
 ![screenshot](screenshot/tag.png)
 
+### ```python levelplot.pyw```
+![screenshot](screenshot/levelplot.png)
 ## arknights side story to unlock (2024-4-23)
 ### by drop 
 ```python stages.py```
