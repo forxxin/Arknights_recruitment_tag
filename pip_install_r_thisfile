@@ -6,3 +6,5 @@ scipy
 PyQt6
 pandas
 openpyxl
+adbutils
+zeroconf
