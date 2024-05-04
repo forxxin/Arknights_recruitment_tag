@@ -6,18 +6,30 @@ import os
 import re
 import time
 from multiprocessing.dummy import Pool
+import weakref
+import socket
+from ctypes import windll
+from multiprocessing import Process,Queue
 
 import cv2 as cv
 import numpy as np
 import pytesseract
 import win32gui
 import win32ui
+from PIL import Image
+import adbutils
+# from adbutils import adb
+from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
 
 from anhrtags import TimeCost
 try:
     import mods.shellcmd1 as shellcmd
 except:
     import shellcmd1 as shellcmd
+try:
+    import mods.myprocess1 as myprocess
+except:
+    import myprocess as myprocess
 
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
@@ -25,8 +37,6 @@ pytesseract.pytesseract.tesseract_cmd = os.path.abspath(r'../../Tesseract-OCR/te
 SAVE_ROIIMG=True
 
 def windows_image(img_anhrtags,app_title='Arknights',border=False,scaled=True):
-    from ctypes import windll
-    from PIL import Image
     try:
         # tc=TimeCost()
         def remove_img(img_anhrtags):
@@ -110,42 +120,42 @@ def win_tag(alltag,img_anhrtags, setup=False):
     tc=TimeCost()
     img = windows_image(img_anhrtags)
     tc.end('windows_image')
-    ret = img_tag(alltag,img_anhrtags,setup=setup,img=img)
+    ret = img_tag(alltag,img,setup=setup)
     tc.end('img_tag')
     return ret
 
 def win_tag_process(alltag,img_anhrtags, setup=False):
-    from multiprocessing import Process,Queue
     tc=TimeCost()
     tc1=TimeCost()
     queue = Queue()
     p = Process(target=windows_image_process, args=(img_anhrtags,queue))
     p.start()
-    img=queue.get()
+    pil_image=queue.get()
     tc.end('windows_image_process')
-    ret = img_tag(alltag,img_anhrtags,setup=setup,img=img)
+    ret = img_tag(alltag,pil_image,setup=setup)
     tc.end('img_tag')
     p.join()
     tc1.end('win_tag_process')
     return ret
 
-def img_tag(alltag,img_anhrtags,setup=False,img=None):
+def img_tag(alltag,img,setup=False):
+    tags=[]
     if img==None:
-        if not os.path.isfile(img_anhrtags):
-            return iter(())
-        img = cv.imread(img_anhrtags,cv.IMREAD_GRAYSCALE)
-    else:
-        from PIL import Image
-        if isinstance(img,Image.Image):
-            img = cv.cvtColor(np.array(img), cv.COLOR_RGB2GRAY)
+        return tags
+    if isinstance(img,str):
+        if (not img) or (not os.path.isfile(img)):
+            return tags
+        img = cv.imread(img,cv.IMREAD_GRAYSCALE)
+    elif isinstance(img,Image.Image):
+        img = cv.cvtColor(np.array(img), cv.COLOR_RGB2GRAY)
     img=resize(img,width=1000)
+    # cv.imshow('img',img)
     height=int(img.shape[0])
     height_key=str(height)
     print(f'\nimg_tag:\n{height=}')
     roidata=roi_data().load()
     def _ocr_img(roi):
         return ocr_img(alltag,img,roi),roi
-    tags=[]
     if setup or (height_key not in roidata) or (height_key in roidata and height<1000 and not roidata[height_key]):
         ROIs=[]
         ROIs_raw = img_roi(img)
@@ -216,28 +226,123 @@ def ocr_img(alltag,img,roi):
     if tags and SAVE_ROIIMG:
         save_img(f"tmp/ocr_img/{'_'.join(tags)}_{int(time.time())}.png",img_crop)
     return tags
-last_adev=None
+
+class MyListener(ServiceListener):
+    def update_service(self, zc: Zeroconf, type_: str, name: str) -> None:
+        info = zc.get_service_info(type_, name)
+        # print(f"Service {name} updated")
+        # print(info.name,socket.inet_ntoa(info.addresses[0]),info.port)
+        print(AdbmDns.ips)
+        # print()
+    def remove_service(self, zc: Zeroconf, type_: str, name: str) -> None:
+        info = zc.get_service_info(type_, name)
+        # print(f"Service {name} removed")
+        # print(info.name,socket.inet_ntoa(info.addresses[0]),info.port)
+        ip = f'{socket.inet_ntoa(info.addresses[0])}:{info.port}'
+        AdbmDns.ips.remove((ip,info.name))
+        print(AdbmDns.ips)
+        # print()
+    def add_service(self, zc: Zeroconf, type_: str, name: str) -> None:
+        info = zc.get_service_info(type_, name)
+        # print(f"Service {name} added, service info: {info}")
+        # print(info.name,socket.inet_ntoa(info.addresses[0]),info.port)
+        ip = f'{socket.inet_ntoa(info.addresses[0])}:{info.port}'
+        AdbmDns.ips.add((ip,info.name))
+        print(AdbmDns.ips)
+        # print()
+class AdbmDns():
+    ips=set()
+    started=False
+    @staticmethod
+    def start():
+        if AdbmDns.started==False:
+            zeroconf = Zeroconf()
+            listener = MyListener()
+            browser = ServiceBrowser(zeroconf, "_adb-tls-connect._tcp.local.", listener)
+            # browser = ServiceBrowser(zeroconf, "_adb._tcp.local.", listener)
+            def atexit(zeroconf):
+                # print('zeroconf.close()')
+                zeroconf.close()
+            finalize = weakref.finalize(zeroconf, atexit, zeroconf)
+            AdbmDns.started=True
+
+AdbmDns.start()
+myprocess.run0('adb start-server')
+
 def adb_tag(alltag,img_anhrtags,setup=False):
+    adb = adbutils.AdbClient(host="127.0.0.1", port=5037)
+    def __adb_tag(adev):
+        if isinstance(adev,adbutils.AdbDevice):
+            try:
+                pil_image = adev.screenshot()
+            except adbutils.errors.AdbError as e:
+                myprocess.run0('adb start-server')
+            except Exception as e:
+                print('__adb_tag screenshot',type(e),e)
+                pil_image=None
+            if pil_image:
+                tags = img_tag(alltag,pil_image,setup=setup)
+                if tags:
+                    adb_tag.last_adev = adev
+                    return tags
+        return []
     def _adb_tag(adev_name=''):
-        global last_adev
+        adev=None
         try:
-            if last_adev:
-                adev = last_adev
+            if adb_tag.last_adev:
+                adev = adb_tag.last_adev
+                return __adb_tag(adev)
             else:
+                if adev_name:
+                    output = adb.connect(adev_name)
+                    adev = adb.device(serial=adev_name)
+                    return __adb_tag(adev)
+                else:
+                    for adev in adb.device_list():
+                        tags = __adb_tag(adev)
+                        if tags:
+                            return tags
+        except adbutils.errors.AdbTimeout as e:
+            myprocess.run0('adb start-server')
+        except Exception as e:
+            print('_adb_tag',type(e),e)
+            adev=None
+        return __adb_tag(adev)
+    AdbmDns.start()
+    tags = _adb_tag()
+    if tags:
+        return tags
+    mdns_ips = AdbmDns.ips
+    pprint.pprint(['mdns',mdns_ips])
+    adev_name=None
+    for adev_name,name in mdns_ips:
+        if adev_name:
+            tags = _adb_tag(adev_name)
+            if tags:
+                return tags
+    return []
+adb_tag.last_adev=None
+
+def adb_tag1(alltag,img_anhrtags,setup=False):
+    def _adb_tag(adev_name=''):
+        try:
+            if adb_tag1.last_adev:
+                adev = adb_tag1.last_adev
+            else:
+                print('adb_tag1',adev_name)
                 adev = shellcmd.AndroidDev(adev_name, adb_tcpip=False) # adb wireless
         except Exception as e:
-            print('adb_tag',type(e),e)
+            print('adb_tag1',type(e),e)
             adev=None
         if isinstance(adev,shellcmd.AndroidDev):
             img = adev.screencap(name1=img_anhrtags,open_img=False)
             if img:
                 tags = img_tag(alltag,img,setup=setup)
                 if tags:
-                    last_adev = adev
+                    adb_tag1.last_adev = adev
                     return tags
-            last_adev=None
+            adb_tag1.last_adev=None
             return []
-            
     tags = _adb_tag()
     if tags:
         return tags
@@ -251,6 +356,9 @@ def adb_tag(alltag,img_anhrtags,setup=False):
             if tags:
                 return tags
     return []
+adb_tag1.last_adev=None
+
+# adb_tag=adb_tag1
 
 def adb_kill():
     shellcmd.AndroidDev.adb_kill()
