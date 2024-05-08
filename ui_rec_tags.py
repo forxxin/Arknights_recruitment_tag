@@ -7,13 +7,31 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from qtlayout import MyGridLayout,MyVBoxLayout,MyHBoxLayout
 from char import Chars
 from ocrtag import win_tag,adb_tag,adb_kill
+try:
+    import adbdevices
+except:
+    import mods.adbdevices
 
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 
+class UiQrCode(QtWidgets.QDialog):
+    def __init__(self,parent=None):
+        super().__init__(parent)
+        self.pair=adbdevices.AdbPair()
+        img = QtGui.QPixmap()
+        img.loadFromData(self.pair.img_buf.getvalue(), "PNG")
+        label=QtWidgets.QLabel()
+        vlayout = MyVBoxLayout()
+        label.setPixmap(img)
+        self.setLayout(vlayout)
+        vlayout.addWidget(label)
+    def closeEvent(self,event):
+        self.pair.stop_pair()
+
 class UiTag(QtWidgets.QLabel):
-    def __init__(self,data,tag):
-        super(UiTag, self).__init__()
+    def __init__(self,data,tag,parent=None):
+        super().__init__(parent)
         self.data=data
         self.setText(tag)
         color = self.data.rarity_color.get(self.data.tag_rarity.get(tag))
@@ -21,8 +39,8 @@ class UiTag(QtWidgets.QLabel):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,QtWidgets.QSizePolicy.Policy.Minimum)
 
 class UiChar(QtWidgets.QLabel):
-    def __init__(self,data,char):
-        super(UiChar, self).__init__()
+    def __init__(self,data,char,parent=None):
+        super().__init__(parent)
         self.data=data
         self.setText(char.name)
         color = self.data.rarity_color.get(char.rarity)
@@ -30,8 +48,8 @@ class UiChar(QtWidgets.QLabel):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,QtWidgets.QSizePolicy.Policy.Minimum)
         
 class UiTagset(QtWidgets.QWidget):
-    def __init__(self,data,tagset):
-        super(UiTagset, self).__init__()
+    def __init__(self,data,tagset,parent=None):
+        super().__init__(parent)
         self.data=data
         hlayout = MyHBoxLayout()
         self.setLayout(hlayout)
@@ -41,8 +59,8 @@ class UiTagset(QtWidgets.QWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,QtWidgets.QSizePolicy.Policy.Minimum)
 
 class UiResultSub(QtWidgets.QWidget):
-    def __init__(self,data,result):
-        super(UiResultSub, self).__init__()
+    def __init__(self,data,result,parent=None):
+        super().__init__(parent)
         self.data=data
         vlayout = MyVBoxLayout()
         self.setLayout(vlayout)
@@ -62,8 +80,8 @@ class UiResultSub(QtWidgets.QWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,QtWidgets.QSizePolicy.Policy.Minimum)
 
 class UiResult(QtWidgets.QWidget):
-    def __init__(self,data,tags):
-        super(UiResult, self).__init__()
+    def __init__(self,data,tags,parent=None):
+        super().__init__(parent)
         self.data=data
         if not tags:
             vlayout = MyVBoxLayout()
@@ -100,8 +118,8 @@ class UiResult(QtWidgets.QWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,QtWidgets.QSizePolicy.Policy.Minimum)
 
 class UiTagSelect(QtWidgets.QPushButton):
-    def __init__(self,data,tag):
-        super(UiTagSelect, self).__init__()
+    def __init__(self,data,tag,parent=None):
+        super().__init__(parent)
         self.data=data
         self.data.tag_rarity.get(tag)
         self.setText(tag)
@@ -112,8 +130,8 @@ class UiTagSelect(QtWidgets.QPushButton):
         # self.resize(self.sizeHint().width(), self.sizeHint().height())
 
 class UiTagsSelect(QtWidgets.QWidget):
-    def __init__(self,data):
-        super(UiTagsSelect, self).__init__()
+    def __init__(self,data,parent=None):
+        super().__init__(parent)
         self.data=data
         self.alltag=[x for xs in self.data.all_tags for x in xs]
         vlayout = MyVBoxLayout()
@@ -150,17 +168,26 @@ class UiTagsSelect(QtWidgets.QWidget):
         self.button_ocrwin = create_btn('OCR-win')
         self.button_ocradb = create_btn('OCR-adb')
         self.button_adbkill = create_btn('adb kill-server')
+        self.button_adbpair = create_btn('adb pair',self.pair)
         self.line_tag=QtWidgets.QLineEdit()
+        self.label_model=QtWidgets.QLabel()
         hlayout.addSpacerItem(QtWidgets.QSpacerItem(0, 0, hPolicy=QtWidgets.QSizePolicy.Policy.Expanding))
         hlayout = MyHBoxLayout()
         vlayout.addLayout(hlayout)
         hlayout.addWidget(self.line_tag)
+        hlayout.addWidget(self.label_model)
         self.line_tag.setReadOnly(True)
         for tag,uitag in self.uitags.items():
             uitag.toggled.connect(self.ok)
         self.real_ok=None
         self.is_update_tag=False
+        self.button_ok.clicked.connect(self.ok)
         self.button_ok.hide()
+        self.button_adbkill.hide()
+    @QtCore.pyqtSlot()
+    def pair(self):
+        qr=UiQrCode(self)
+        qr.show()
     @QtCore.pyqtSlot()
     def addtag(self):
         text=self.taginput.text().lower()
@@ -195,6 +222,7 @@ class UiTagsSelect(QtWidgets.QWidget):
     def ok(self):
         if self.real_ok and not self.is_update_tag:
             self.real_ok()
+        self.label_model.setText('')
     def clear(self):
         self.select([])
         self.button_ok.clicked.emit()
@@ -214,22 +242,21 @@ class UiTagsSelect(QtWidgets.QWidget):
 
 class UiRecTagWorker(QtCore.QObject):
     send_tags = QtCore.pyqtSignal(list)
+    send_model = QtCore.pyqtSignal(str)
     def __init__(self,alltag, parent=None):
-        super(self.__class__, self).__init__(parent)
+        super().__init__(parent)
         self.img_anhrtags = './tmp/tmp_anhrtags.png'
         self.alltag=alltag
     @QtCore.pyqtSlot()
     def ocr_win(self):
         tags=win_tag(self.alltag,self.img_anhrtags)
-        # self.ui_tags.select(tags)
-        # self.set_view()
         self.send_tags.emit(tags)
+        self.send_model.emit('win')
     @QtCore.pyqtSlot()
     def ocr_adb(self):
-        tags=adb_tag(self.alltag,self.img_anhrtags)
-        # self.ui_tags.select(tags)
-        # self.set_view()
+        tags,(guid,model)=adb_tag(self.alltag,self.img_anhrtags)
         self.send_tags.emit(tags)
+        self.send_model.emit(model)
     @QtCore.pyqtSlot()
     def adb_kill_server(self):
         adb_kill()
@@ -238,8 +265,8 @@ class UiRecTag(QtWidgets.QMainWindow):
     signal_ocr_win = QtCore.pyqtSignal()
     signal_ocr_adb = QtCore.pyqtSignal()
     signal_adb_kill_server = QtCore.pyqtSignal(list)
-    def __init__(self,args):
-        super(UiRecTag,self).__init__()
+    def __init__(self,args,parent=None):
+        super().__init__(parent)
         self.data=Chars(args.get('server'),args.get('lang'))
         alltag=[x for xs in self.data.all_tags for x in xs]
         self.setWindowTitle(f"Arknights Tags")
@@ -257,7 +284,7 @@ class UiRecTag(QtWidgets.QMainWindow):
         self.create_worker(alltag)
         self.ui_tags.real_ok=self.set_view
         self.set_view()
-        self.ui_tags.button_ok.clicked.connect(self.set_view)
+        # self.ui_tags.button_ok.clicked.connect(self.set_view)
         self.ui_tags.button_ocrwin.clicked.connect(self.ocr_win)
         self.ui_tags.button_ocradb.clicked.connect(self.ocr_adb)
         self.ui_tags.button_adbkill.clicked.connect(self.qobj_worker.adb_kill_server)
@@ -269,16 +296,22 @@ class UiRecTag(QtWidgets.QMainWindow):
         self.qobj_worker.moveToThread(self.worker_thread)
         self.worker_thread.start()
         self.qobj_worker.send_tags.connect(self.update_tags)
+        self.qobj_worker.send_model.connect(self.update_model)
     @QtCore.pyqtSlot()
     def ocr_win(self):
         self.update_tags([])
         self.signal_ocr_win.emit()
         self.ui_tags.button_ocrwin.setEnabled(False)
+        self.ui_tags.button_ocradb.setEnabled(False)
     @QtCore.pyqtSlot()
     def ocr_adb(self):
         self.update_tags([])
         self.signal_ocr_adb.emit()
+        self.ui_tags.button_ocrwin.setEnabled(False)
         self.ui_tags.button_ocradb.setEnabled(False)
+    @QtCore.pyqtSlot(str)
+    def update_model(self,model):
+        self.ui_tags.label_model.setText(model)
     @QtCore.pyqtSlot(list)
     def update_tags(self,tags):
         self.ui_tags.select(tags)
@@ -312,7 +345,6 @@ class UiRecTag(QtWidgets.QMainWindow):
             self.worker_thread.wait()
     def closeEvent(self,event):
         self.close_worker()
-
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
