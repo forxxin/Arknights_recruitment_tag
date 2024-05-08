@@ -260,12 +260,17 @@ def adb_tag(alltag,img_anhrtags,setup=False):
                     adb_tag.last_d = d
                     return tags
         return []
+    def devices():
+        if adb_tag.last_d:
+            yield adb_tag.last_d
+        for x in adbdevices.adb_devices():
+            yield x
     try:
-        for d,(guid,model) in adbdevices.adb_devices():
+        for d,(guid,model) in devices():
             print(d.serial,(guid,model))
             tags=adb_tag_(d)
             if tags:
-                adb_tag.last_d = d
+                adb_tag.last_d = d,(guid,model)
                 return tags,(guid,model)
     except (adbdevices.AdbError,adbdevices.AdbTimeout) as e:
         print('adb_tag',type(e),e)
