@@ -8,3 +8,4 @@ pandas
 openpyxl
 adbutils
 zeroconf
+qrcode
