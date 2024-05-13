@@ -30,20 +30,20 @@
 |                                | Stultifera Navis Reception Room             |           |      | 5000 | 1520 | 3.289473684 |
 | Invitation To Wine             | Shan-Ch'eng Teahouse                        |           |      | 5000 | 1620 | 3.086419753 |
 | Dorothy’s Vision               | Rhine Experimental Culture Pod              |           |      | 5000 | 1650 | 3.03030303  |
-|                                | Kazimierz Broadcast Center                  | 1         | 0    | 5000 | 1700 | 2.941176471 |
+| Near Light                     | Kazimierz Broadcast Center                  | 1         | 0    | 5000 | 1700 | 2.941176471 |
 | Who Is Real                    | Tan-Ch'ing Court                            | 1         | 0    | 5000 | 1795 | 2.78551532  |
-|                                | Iberian Resort Town                         | 1         | 0    | 5000 | 1810 | 2.762430939 |
-|                                | Seven Cities-style Restaurant               | 1         | 0    | 5000 | 1875 | 2.666666667 |
+| Under Tides                    | Iberian Resort Town                         | 1         | 0    | 5000 | 1810 | 2.762430939 |
+| Darknights Memoir              | Seven Cities-style Restaurant               | 1         | 0    | 5000 | 1875 | 2.666666667 |
 | Maria Nearl                    | Nearls' Living Room Replica                 | 1         | 0    | 5000 | 1885 | 2.652519894 |
-|                                | Express Chain Pizzeria                      | 1         | 0    | 5585 | 2120 | 2.634433962 |
-|                                | Critical Response Team Office               | 1         | 0    | 5000 | 2015 | 2.481389578 |
+| Grani and the Knights' Treasure| Express Chain Pizzeria                      | 1         | 0    | 5585 | 2120 | 2.634433962 |
+| A Walk in the Dust             | Critical Response Team Office               | 1         | 0    | 5000 | 2015 | 2.481389578 |
 | Guide Ahead                    | Laterano Notarial Hall Lounge               |           |      | 5000 | 2045 | 2.444987775 |
 |                                | Special Equipment Exhibition Room           |           |      | 5000 | 2045 | 2.444987775 |
 | Twilight of Wolumonde          | Leithanian Nights                           | 1         | 0    | 5000 | 2190 | 2.283105023 |
 | Dossoles Holiday               | Dossoles Private Spa                        | 1         | 0    | 5000 | 2240 | 2.232142857 |
 | Ideal City: Endless Carnival   | Great Aquapit Funtastic Experientorium      |           |      | 5000 | 2250 | 2.222222222 |
 | Heart of Surging Flame         | Modern Music Rehearsal Room                 | 1         | 0    | 5300 | 2520 | 2.103174603 |
-| Gavial The Great Chief Returns | Tribal-Style Inn                            | 1         | 0    | 5000 | 2415 | 2.070393375 |
+| The Great Chief Returns        | Tribal-Style Inn                            | 1         | 0    | 5000 | 2415 | 2.070393375 |
 | Code of Brawl                  | Penguin Logistics Safehouse                 | 1         | 0    | 5000 | 3500 | 1.428571429 |
 |                                | No.12 Life Cycle Cabin                      |           |      | 3045 | 2825 | 1.077876106 |
 |                                | Side Line/ Simple Black-and-white Furniture |           |      | 2035 | 1945 | 1.046272494 |
@@ -59,7 +59,7 @@
 |                                | The Zen Garden                              |           |      | 4800 | 5605 | 0.856378234 |
 |                                | Modern Columbian Hotel                      | 1         | 1    | 4555 | 5330 | 0.854596623 |
 |                                | Siesta Beach Hut                            | 1         | 1    | 4800 | 5650 | 0.849557522 |
-| Near Light                     | Walter Interior Sensations                  | 1         | 1    | 4500 | 5300 | 0.849056604 |
+|                                | Walter Interior Sensations                  | 1         | 1    | 4500 | 5300 | 0.849056604 |
 
 ## Install
 Install Python 3.12.2
