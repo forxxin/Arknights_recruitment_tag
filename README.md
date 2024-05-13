@@ -38,6 +38,7 @@
 | A Walk in the Dust                       | Critical Response Team Office               | 1          | 0      | 5000  | 2015   | 2.481      |
 | # Guide Ahead                            | Laterano Notarial Hall Lounge               |            |        | 5000  | 2045   | 2.445      |
 | # Operation Originium Dust               | Special Equipment Exhibition Room           |            |        | 5000  | 2045   | 2.445      |
+| Grani and the Knights' Treasure          | Express Chain Pizzeria                      |            |        | 5000  | 2120   | 2.358      |
 | Twilight of Wolumonde                    | Leithanian Nights                           | 1          | 0      | 5000  | 2190   | 2.283      |
 | Dossoles Holiday                         | Dossoles Private Spa                        | 1          | 0      | 5000  | 2240   | 2.232      |
 | # Ideal City: Endless Carnival           | Great Aquapit Funtastic Experientorium      |            |        | 5000  | 2250   | 2.222      |
@@ -45,8 +46,8 @@
 | The Great Chief Returns                  | Tribal-Style Inn                            | 1          | 0      | 5000  | 2415   | 2.07       |
 | Code of Brawl                            | Penguin Logistics Safehouse                 | 1          | 0      | 5000  | 3500   | 1.429      |
 |                                          | No.12 Life Cycle Cabin                      |            |        | 3045  | 2825   | 1.078      |
-|                                          | Side Line/ Simple Black-and-white Furniture |            |        | 2035  | 1945   | 1.046      |
 |                                          | Side Line/ Simple Orange Furniture          |            |        | 2035  | 1945   | 1.046      |
+|                                          | Side Line/ Simple Black-and-white Furniture |            |        | 2035  | 1945   | 1.046      |
 |                                          | Ch'en's Office                              |            |        | 4915  | 5095   | 0.965      |
 |                                          | Fantastic Bio-documentary                   |            |        | 3195  | 3320   | 0.962      |
 |                                          | Columbian Café                              | 1          | 1      | 4420  | 4775   | 0.926      |
@@ -59,15 +60,14 @@
 |                                          | Modern Columbian Hotel                      | 1          | 1      | 4555  | 5330   | 0.855      |
 |                                          | Siesta Beach Hut                            | 1          | 1      | 4800  | 5650   | 0.85       |
 |                                          | Walter Interior Sensations                  | 1          | 1      | 4500  | 5300   | 0.849      |
-| Grani and the Knights' Treasure          | Express Chain Pizzeria                      |            |        |       |        |            |
+| # Come Catastrophes or Wakes of Vultures | BSW Safehouse                               |            |        |       |        |            |
 | # IL Siracusano                          | Siracusan Court of Justice                  |            |        |       |        |            |
 | # What the Firelight Casts               | Reed's Cabin                                |            |        |       |        |            |
 | # Where Vernal Winds Will Never Blow     | Yumen Clinic                                |            |        |       |        |            |
 | # Lone Trail                             | Rhine Tech Eco-Garden                       |            |        |       |        |            |
 | # Hortus de Escapismo                    | Ambulacrum Ambrosii                         |            |        |       |        |            |
 | # So Long, Adele: Home Away From Home    | Trip to the 'White Volcano'                 |            |        |       |        |            |
-| # Come Catastrophes or Wakes of Vultures | BSW Safehouse                               |            |        |       |        |            |
-| # Zwillingstürme im Herbst               | Ludwigs-Universität Lecture Hall            |            |        |       |        |            |
+| # Zwillingstürme im Herbst               | Ludwigs-Universität Lecture Hall            |            |        | 5000  |        |            |
 
 ## Install
 Install Python 3.12.2
