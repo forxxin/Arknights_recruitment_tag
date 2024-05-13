@@ -22,52 +22,52 @@
 | Stultifera Navis                | SN-5[Oriron Shard]0                                          ||
 
 ### by furniture
-| side story                               | furniture store                             | in store   | full   | amb   | cost   | amb/cost    |
-|------------------------------------------|---------------------------------------------|------------|--------|-------|--------|-------------|
-| Mansfield Break                          | Mansfield Prison Cell                       | 1          | 0      | 5000  | 1225   | 4.081632653 |
-| # Break the Ice                          | Kjerag-Style Inn                            |            |        | 5000  | 1380   | 3.623188406 |
-| # Lingering Echoes                       | Afterglow-Styled Music Room                 |            |        | 5000  | 1515   | 3.300330033 |
-|                                          | Stultifera Navis Reception Room             |            |        | 5000  | 1520   | 3.289473684 |
-| # Invitation to Wine                     | Shan-Ch'eng Teahouse                        |            |        | 5000  | 1620   | 3.086419753 |
-| # Dorothy's Vision                       | Rhine Experimental Culture Pod              |            |        | 5000  | 1650   | 3.03030303  |
-| Near Light                               | Kazimierz Broadcast Center                  | 1          | 0      | 5000  | 1700   | 2.941176471 |
-| Who is Real                              | Tan-Ch'ing Court                            | 1          | 0      | 5000  | 1795   | 2.78551532  |
-| Under Tides                              | Iberian Resort Town                         | 1          | 0      | 5000  | 1810   | 2.762430939 |
-| Darknights Memoir                        | Seven Cities-style Restaurant               | 1          | 0      | 5000  | 1875   | 2.666666667 |
-| Maria Nearl                              | Nearls' Living Room Replica                 | 1          | 0      | 5000  | 1885   | 2.652519894 |
-| A Walk in the Dust                       | Critical Response Team Office               | 1          | 0      | 5000  | 2015   | 2.481389578 |
-| # Guide Ahead                            | Laterano Notarial Hall Lounge               |            |        | 5000  | 2045   | 2.444987775 |
-| # Operation Originium Dust               | Special Equipment Exhibition Room           |            |        | 5000  | 2045   | 2.444987775 |
-| Twilight of Wolumonde                    | Leithanian Nights                           | 1          | 0      | 5000  | 2190   | 2.283105023 |
-| Dossoles Holiday                         | Dossoles Private Spa                        | 1          | 0      | 5000  | 2240   | 2.232142857 |
-| # Ideal City: Endless Carnival           | Great Aquapit Funtastic Experientorium      |            |        | 5000  | 2250   | 2.222222222 |
-| Heart of Surging Flame                   | Modern Music Rehearsal Room                 | 1          | 0      | 5300  | 2520   | 2.103174603 |
-| The Great Chief Returns                  | Tribal-Style Inn                            | 1          | 0      | 5000  | 2415   | 2.070393375 |
-| Code of Brawl                            | Penguin Logistics Safehouse                 | 1          | 0      | 5000  | 3500   | 1.428571429 |
-|                                          | No.12 Life Cycle Cabin                      |            |        | 3045  | 2825   | 1.077876106 |
-|                                          | Side Line/ Simple Black-and-white Furniture |            |        | 2035  | 1945   | 1.046272494 |
-|                                          | Side Line/ Simple Orange Furniture          |            |        | 2035  | 1945   | 1.046272494 |
-|                                          | Ch'en's Office                              |            |        | 4915  | 5095   | 0.964671246 |
-|                                          | Fantastic Bio-documentary                   |            |        | 3195  | 3320   | 0.962349398 |
-|                                          | Columbian Café                              | 1          | 1      | 4420  | 4775   | 0.92565445  |
-|                                          | Secret Occult Society                       |            |        | 4800  | 5380   | 0.892193309 |
-|                                          | Caladon Light Store                         | 1          | 1      | 5000  | 5700   | 0.877192982 |
-|                                          | Victorian Royal Guard Academy Dormitory     |            |        | 5000  | 5705   | 0.876424189 |
-|                                          | Instrument Repair Workshop                  | 1          | 1      | 5000  | 5730   | 0.872600349 |
-|                                          | The Photography Hobbyist's Studio           | 1          | 1      | 5000  | 5735   | 0.871839582 |
-|                                          | The Zen Garden                              |            |        | 4800  | 5605   | 0.856378234 |
-|                                          | Modern Columbian Hotel                      | 1          | 1      | 4555  | 5330   | 0.854596623 |
-|                                          | Siesta Beach Hut                            | 1          | 1      | 4800  | 5650   | 0.849557522 |
-|                                          | Walter Interior Sensations                  | 1          | 1      | 4500  | 5300   | 0.849056604 |
-| Grani and the Knights' Treasure          | Express Chain Pizzeria                      |            |        |       |        |             |
-| # IL Siracusano                          | Siracusan Court of Justice                  |            |        |       |        |             |
-| # What the Firelight Casts               | Reed's Cabin                                |            |        |       |        |             |
-| # Where Vernal Winds Will Never Blow     | Yumen Clinic                                |            |        |       |        |             |
-| # Lone Trail                             | Rhine Tech Eco-Garden                       |            |        |       |        |             |
-| # Hortus de Escapismo                    | Ambulacrum Ambrosii                         |            |        |       |        |             |
-| # So Long, Adele: Home Away From Home    | Trip to the 'White Volcano'                 |            |        |       |        |             |
-| # Come Catastrophes or Wakes of Vultures | BSW Safehouse                               |            |        |       |        |             |
-| # Zwillingstürme im Herbst               | Ludwigs-Universität Lecture Hall            |            |        |       |        |             |
+| side story                               | furniture store                             | in store   | full   | amb   | cost   | amb/cost   |
+|------------------------------------------|---------------------------------------------|------------|--------|-------|--------|------------|
+| Mansfield Break                          | Mansfield Prison Cell                       | 1          | 0      | 5000  | 1225   | 4.082      |
+| # Break the Ice                          | Kjerag-Style Inn                            |            |        | 5000  | 1380   | 3.623      |
+| # Lingering Echoes                       | Afterglow-Styled Music Room                 |            |        | 5000  | 1515   | 3.3        |
+|                                          | Stultifera Navis Reception Room             |            |        | 5000  | 1520   | 3.289      |
+| # Invitation to Wine                     | Shan-Ch'eng Teahouse                        |            |        | 5000  | 1620   | 3.086      |
+| # Dorothy's Vision                       | Rhine Experimental Culture Pod              |            |        | 5000  | 1650   | 3.03       |
+| Near Light                               | Kazimierz Broadcast Center                  | 1          | 0      | 5000  | 1700   | 2.941      |
+| Who is Real                              | Tan-Ch'ing Court                            | 1          | 0      | 5000  | 1795   | 2.786      |
+| Under Tides                              | Iberian Resort Town                         | 1          | 0      | 5000  | 1810   | 2.762      |
+| Darknights Memoir                        | Seven Cities-style Restaurant               | 1          | 0      | 5000  | 1875   | 2.667      |
+| Maria Nearl                              | Nearls' Living Room Replica                 | 1          | 0      | 5000  | 1885   | 2.653      |
+| A Walk in the Dust                       | Critical Response Team Office               | 1          | 0      | 5000  | 2015   | 2.481      |
+| # Guide Ahead                            | Laterano Notarial Hall Lounge               |            |        | 5000  | 2045   | 2.445      |
+| # Operation Originium Dust               | Special Equipment Exhibition Room           |            |        | 5000  | 2045   | 2.445      |
+| Twilight of Wolumonde                    | Leithanian Nights                           | 1          | 0      | 5000  | 2190   | 2.283      |
+| Dossoles Holiday                         | Dossoles Private Spa                        | 1          | 0      | 5000  | 2240   | 2.232      |
+| # Ideal City: Endless Carnival           | Great Aquapit Funtastic Experientorium      |            |        | 5000  | 2250   | 2.222      |
+| Heart of Surging Flame                   | Modern Music Rehearsal Room                 | 1          | 0      | 5300  | 2520   | 2.103      |
+| The Great Chief Returns                  | Tribal-Style Inn                            | 1          | 0      | 5000  | 2415   | 2.07       |
+| Code of Brawl                            | Penguin Logistics Safehouse                 | 1          | 0      | 5000  | 3500   | 1.429      |
+|                                          | No.12 Life Cycle Cabin                      |            |        | 3045  | 2825   | 1.078      |
+|                                          | Side Line/ Simple Black-and-white Furniture |            |        | 2035  | 1945   | 1.046      |
+|                                          | Side Line/ Simple Orange Furniture          |            |        | 2035  | 1945   | 1.046      |
+|                                          | Ch'en's Office                              |            |        | 4915  | 5095   | 0.965      |
+|                                          | Fantastic Bio-documentary                   |            |        | 3195  | 3320   | 0.962      |
+|                                          | Columbian Café                              | 1          | 1      | 4420  | 4775   | 0.926      |
+|                                          | Secret Occult Society                       |            |        | 4800  | 5380   | 0.892      |
+|                                          | Caladon Light Store                         | 1          | 1      | 5000  | 5700   | 0.877      |
+|                                          | Victorian Royal Guard Academy Dormitory     |            |        | 5000  | 5705   | 0.876      |
+|                                          | Instrument Repair Workshop                  | 1          | 1      | 5000  | 5730   | 0.873      |
+|                                          | The Photography Hobbyist's Studio           | 1          | 1      | 5000  | 5735   | 0.872      |
+|                                          | The Zen Garden                              |            |        | 4800  | 5605   | 0.856      |
+|                                          | Modern Columbian Hotel                      | 1          | 1      | 4555  | 5330   | 0.855      |
+|                                          | Siesta Beach Hut                            | 1          | 1      | 4800  | 5650   | 0.85       |
+|                                          | Walter Interior Sensations                  | 1          | 1      | 4500  | 5300   | 0.849      |
+| Grani and the Knights' Treasure          | Express Chain Pizzeria                      |            |        |       |        |            |
+| # IL Siracusano                          | Siracusan Court of Justice                  |            |        |       |        |            |
+| # What the Firelight Casts               | Reed's Cabin                                |            |        |       |        |            |
+| # Where Vernal Winds Will Never Blow     | Yumen Clinic                                |            |        |       |        |            |
+| # Lone Trail                             | Rhine Tech Eco-Garden                       |            |        |       |        |            |
+| # Hortus de Escapismo                    | Ambulacrum Ambrosii                         |            |        |       |        |            |
+| # So Long, Adele: Home Away From Home    | Trip to the 'White Volcano'                 |            |        |       |        |            |
+| # Come Catastrophes or Wakes of Vultures | BSW Safehouse                               |            |        |       |        |            |
+| # Zwillingstürme im Herbst               | Ludwigs-Universität Lecture Hall            |            |        |       |        |            |
 
 ## Install
 Install Python 3.12.2
