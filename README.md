@@ -22,6 +22,7 @@
 | Stultifera Navis                | SN-5[Oriron Shard]0                                          ||
 
 ### by furniture
+```python furniture.py```
 | side story                               | furniture store                             | in store   | full   | amb   | cost   | amb/cost   |
 |------------------------------------------|---------------------------------------------|------------|--------|-------|--------|------------|
 | Mansfield Break                          | Mansfield Prison Cell                       | 1          | 0      | 5000  | 1225   | 4.082      |
