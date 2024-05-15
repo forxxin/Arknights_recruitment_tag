@@ -677,7 +677,7 @@ def adb_kill():
 colors={6:'darkorange', 5:'gold', 4:'plum', 3:'deepskyblue', 2:'lightyellow', 1:'lightgrey', }
 def ui_hr_tag(tags=[]):
     class Checkbar(tk.Frame):
-        def __init__(self, parent=None, picks=[]):
+        def __init__(self,picks=[],parent=None):
             super().__init__(parent)
             self.checks_value = []
             self.checks={}
@@ -765,7 +765,7 @@ def ui_hr_tag(tags=[]):
     txt_frame = tk.Frame(root, bg='white', pady=3)
     txtm_frame = tk.Frame(root, bg='white', pady=3)
 
-    check_frame=Checkbar(root,[Character.profession(),Character.position(),Character.tagList()])
+    check_frame=Checkbar([Character.profession(),Character.position(),Character.tagList()],root)
     print(Character.profession())
     print(Character.position())
     print(Character.tagList())
