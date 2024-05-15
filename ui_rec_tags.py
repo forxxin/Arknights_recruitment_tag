@@ -18,6 +18,7 @@ os.chdir(app_path)
 class UiQrCode(QtWidgets.QDialog):
     def __init__(self,parent=None):
         super().__init__(parent)
+        self.setWindowTitle(f"adb pair")
         self.pair=adbdevices.AdbPair()
         img = QtGui.QPixmap()
         img.loadFromData(self.pair.img_buf.getvalue(), "PNG")
