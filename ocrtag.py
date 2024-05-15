@@ -20,6 +20,7 @@ import win32con
 import win32process
 import win32ui
 from PIL import Image
+import adbutils
 
 import adbdevices
 from anhrtags import TimeCost
@@ -31,10 +32,6 @@ try:
     import mods.myprocess1 as myprocess
 except:
     import myprocess as myprocess
-try:
-    import adbutils
-except:
-    import mods.adbutils
 
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
@@ -148,6 +145,7 @@ def win_tag_process(alltag,img_anhrtags, setup=False):
     return ret
 
 def img_tag(alltag,img,setup=False):
+    width_resize=1000
     tags=[]
     if img==None:
         return tags
@@ -157,15 +155,17 @@ def img_tag(alltag,img,setup=False):
         img = cv.imread(img,cv.IMREAD_GRAYSCALE)
     elif isinstance(img,Image.Image):
         img = cv.cvtColor(np.array(img), cv.COLOR_RGB2GRAY)
-    img=resize(img,width=1000)
+    img=resize(img,width=width_resize)
     # cv.imshow('img',img)
     height=int(img.shape[0])
+    if height>width_resize:
+        return tags
     height_key=str(height)
     print(f'img_tag: {height=}')
     roidata=roi_data().load()
     def _ocr_img(roi):
         return ocr_img(alltag,img,roi),roi
-    if setup or (height_key not in roidata) or (height_key in roidata and height<1000 and not roidata[height_key]):
+    if setup or (height_key not in roidata) or (height_key in roidata and height<width_resize and not roidata[height_key]):
         ROIs=[]
         ROIs_raw = img_roi(img)
         with Pool(7) as pool:
@@ -264,7 +264,8 @@ def adb_tag(alltag,img_anhrtags,setup=False):
         if adb_tag.last_d:
             yield adb_tag.last_d
         for x in adbdevices.adb_devices():
-            yield x
+            if x!=adb_tag.last_d:
+                yield x
     try:
         for d,(guid,model) in devices():
             print(d.serial,(guid,model))
