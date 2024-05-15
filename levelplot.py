@@ -10,7 +10,8 @@ import resource
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 
-gamedata = resource.GameData.json_data('gamedata',lang='zh_CN')
+gamedata = resource.GameData.json_data('gamedata',lang='en_US')
+@cache
 def cost(rarity=6,level=90,evolve=2):
     if isinstance(rarity,str):
         rarity=int(rarity[-1:])
@@ -73,6 +74,46 @@ def cost1(rarity=6):
         # if evolve>e:
             # golds.append([gold_e])
             # gold_sum+=gold_e
+    return result
+
+@cache
+def max_level(rarity):
+    ''' 
+    for e,maxlevel in max_level(rarity):
+        for level in range(1,maxlevel+1): 
+    '''
+    return list(enumerate(gamedata['maxLevel'][rarity-1])) # [(0,50),(1,80),(2,90)]
+
+@cache
+def max_e(rarity):
+    return len(max_level(rarity))-1
+
+@cache
+def max_elevel(rarity):
+    e=max_e(rarity)
+    return e,max_level(rarity)[e]
+
+@cache
+def cost2():
+    result={}
+    for rarity in range(1,7):
+        exp_sum=0
+        gold_sum=0
+        result.setdefault(rarity,{})
+        for e,maxlevel in max_level(rarity):
+            for level in range(1,maxlevel+1):
+                exp=gamedata['characterExpMap'][e][level-2] if level>1 else 0
+                if level>1:
+                    gold=gamedata['characterUpgradeCostMap'][e][level-2]
+                else:
+                    gold=0
+                    if e>0:
+                        gold=gamedata['evolveGoldCost'][rarity-1][e-1]
+                    if gold==-1:
+                        gold=0
+                exp_sum+=exp
+                gold_sum+=gold
+                result[rarity][(e,level)]={'exp_sum':exp_sum,'gold_sum':gold_sum}
     return result
 
 def plot(count=None):
