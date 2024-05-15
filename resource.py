@@ -49,6 +49,7 @@ def download(name,url,update=False):
 
 @cache
 def json_tl(name):
+    ''' https://github.com/Aceship/AN-EN-Tags/ '''
     url = f'https://github.com/Aceship/AN-EN-Tags/raw/master/json/tl-{name}.json'
     file = download(f'Aceship/tl-{name}.json',url)
     data = load_json(file)
@@ -60,10 +61,10 @@ def json_tl(name):
         return data
 
 class GameData:
+    ''' https://github.com/Kengxxiao/ArknightsGameData_YoStar '''
     @staticmethod
     @cache
     def url_base(lang): #story_review
-        # https://github.com/Kengxxiao/ArknightsGameData_YoStar
         if lang=='zh_CN':
             return f'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/'
         else:
@@ -104,19 +105,19 @@ class CharImg:
     @staticmethod
     @cache
     def avatar(charid):
-        return img(charid,'avatar/{charid}.png')
+        return CharImg.img(charid,'avatar/{charid}.png')
     @staticmethod
     @cache
     def avatar2(charid):
-        return img(charid,'avatar/{charid}_2.png')
+        return CharImg.img(charid,'avatar/{charid}_2.png')
     @staticmethod
     @cache
     def portrait(charid):
-        return img(charid,'portrait/{charid}_1.png')
+        return CharImg.img(charid,'portrait/{charid}_1.png')
     @staticmethod
     @cache
     def portrait2(charid):
-        return img(charid,'portrait/{charid}_2.png')
+        return CharImg.img(charid,'portrait/{charid}_2.png')
 
 def penguin_stats(server='US',update=False):
     @cache
@@ -132,7 +133,19 @@ def penguin_stats(server='US',update=False):
     formulas = _penguin_stats('formulas','formula')
     return stages,items,stageitems,formulas
 
+class ItemImg:
+    url_base = "https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/main/item/"
+    item_table=GameData.json_table('item', lang='en_US')
+    @staticmethod
+    @cache
+    def img(itemid):
+        iconId = ItemImg.item_table.get('items',{}).get(itemid,{}).get('iconId','') or ''
+        url_img = urllib.parse.urljoin(ItemImg.url_base, f'{iconId}.png')
+        # print(itemid,iconId)
+        return download(f'img/item/{itemid}.png',url_img)
+
 class ItemImg1:
+    ''' https://github.com/Aceship/Arknight-Images '''
     url_base = "https://raw.githubusercontent.com/Aceship/Arknight-Images/main/material/"
     img_data={'30011': ('bg/item-1.png', '30.png'), '30012': ('bg/item-2.png', '24.png'), '30013': ('bg/item-3.png', '18.png'), '30014': ('bg/item-4.png', '12.png'), '30061': ('bg/item-1.png', '25.png'), '30062': ('bg/item-2.png', '19.png'), '30063': ('bg/item-3.png', '13.png'), '30064': ('bg/item-4.png', '7.png'), '30031': ('bg/item-1.png', '28.png'), '30032': ('bg/item-2.png', '22.png'), '30033': ('bg/item-3.png', '16.png'), '30034': ('bg/item-4.png', '10.png'), '30021': ('bg/item-1.png', '29.png'), '30022': ('bg/item-2.png', '23.png'), '30023': ('bg/item-3.png', '17.png'), '30024': ('bg/item-4.png', '11.png'), '30041': ('bg/item-1.png', '27.png'), '30042': ('bg/item-2.png', '21.png'), '30043': ('bg/item-3.png', '15.png'), '30044': ('bg/item-4.png', '9.png'), '30051': ('bg/item-1.png', '26.png'), '30052': ('bg/item-2.png', '20.png'), '30053': ('bg/item-3.png', '14.png'), '30054': ('bg/item-4.png', '8.png'), '30073': ('bg/item-3.png', '31.png'), '30074': ('bg/item-4.png', '6.png'), '30083': ('bg/item-3.png', '33.png'), '30084': ('bg/item-4.png', '5.png'), '30093': ('bg/item-3.png', '32.png'), '30094': ('bg/item-4.png', '4.png'), '30103': ('bg/item-3.png', '34.png'), '30104': ('bg/item-4.png', '3.png'), '31013': ('bg/item-3.png', '63.png'), '31014': ('bg/item-4.png', '64.png'), '31023': ('bg/item-3.png', '61.png'), '31024': ('bg/item-4.png', '62.png'), '30115': ('bg/item-5.png', '2.png'), '30125': ('bg/item-5.png', '1.png'), '30135': ('bg/item-5.png', '0.png'), '31033': ('bg/item-3.png', '67.png'), '31034': ('bg/item-4.png', '66.png')}
     @staticmethod
@@ -148,17 +161,6 @@ class ItemImg1:
     @cache
     def img(itemid):
         return ItemImg1.imgs().get(itemid) or []
-
-class ItemImg:
-    url_base = "https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/main/item/"
-    item_table=GameData.json_table('item', lang='en_US')
-    @staticmethod
-    @cache
-    def img(itemid):
-        iconId = ItemImg.item_table.get('items',{}).get(itemid,{}).get('iconId','') or ''
-        url_img = urllib.parse.urljoin(ItemImg.url_base, f'{iconId}.png')
-        # print(itemid,iconId)
-        return download(f'img/item/{itemid}.png',url_img)
 
 if __name__ == "__main__":
     url1='https://penguin-stats.io/PenguinStats/api/v2/formula'
