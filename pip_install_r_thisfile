@@ -9,3 +9,4 @@ openpyxl
 adbutils
 zeroconf
 qrcode
+tabulate
