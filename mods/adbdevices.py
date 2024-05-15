@@ -34,48 +34,53 @@ class MDnsListener(ServiceListener):
         info = zc.get_service_info(type_, name)
         if info:
             AdbMDns.add(info)
-
+class AdbMDnsError(Exception):
+    pass
 class AdbMDns:
-    _devices=set()
+    _devices={}
     started=False
     type="_adb-tls-connect._tcp.local."
+    # type='_adb._tcp.local.'
     lock = threading.Lock()
+    zeroconf=None
     finalize=None
     @staticmethod
     def start():
         if AdbMDns.started==False:
-            zeroconf = Zeroconf()
-            ServiceBrowser(zeroconf, AdbMDns.type, MDnsListener())
+            AdbMDns.zeroconf = Zeroconf()
+            ServiceBrowser(AdbMDns.zeroconf, AdbMDns.type, MDnsListener())
             def atexit(zeroconf):
-                print('zeroconf.close()')
                 zeroconf.close()
-            AdbMDns.finalize = weakref.finalize(zeroconf, atexit, zeroconf)
+            AdbMDns.finalize = weakref.finalize(AdbMDns.zeroconf, atexit, AdbMDns.zeroconf)
             AdbMDns.started=True
     @staticmethod
     def update(info):
         info=AdbMDns._info(info)
         AdbMDns.remove(info)
         AdbMDns.add(info)
-        AdbMDns.print()
+        # AdbMDns.print()
     @staticmethod
     def add(info):
         if not isinstance(info,tuple):
             info=AdbMDns._info(info)
+        ip,serialno=info
         AdbMDns.lock.acquire()
-        AdbMDns._devices.add(info)
+        AdbMDns._devices[serialno]=ip
         AdbMDns.lock.release()
-        AdbMDns.print()
+        # AdbMDns.print()
     @staticmethod
     def remove(info):
         if not isinstance(info,tuple):
             info=AdbMDns._info(info)
         ip,serialno=info
+        ip,port=ip.split(':')
         AdbMDns.lock.acquire()
-        for i in AdbMDns._devices.copy():
-            if (i[0]==ip or i[1]==serialno) and i in AdbMDns._devices:
-                AdbMDns._devices.remove(i)
+        for serialno_,ip_ in tuple(AdbMDns._devices.items()):
+            ip_,port=ip_.split(':')
+            if ip_==ip or serialno_==serialno:
+                del AdbMDns._devices[serialno_]
         AdbMDns.lock.release()
-        AdbMDns.print()
+        # AdbMDns.print()
     @staticmethod
     def _info(info):
         ip = f'{socket.inet_ntoa(info.addresses[0])}:{info.port}'
@@ -83,12 +88,12 @@ class AdbMDns:
             serialno = m.group(1)
         else:
             serialno = ''
-            print('AdbMDns info.name',info.name)
+            raise AdbMDnsError(f'AdbMDns not match: {info.name}')
         return ip,serialno
     @staticmethod
     def devices():
         AdbMDns.lock.acquire()
-        d=tuple(AdbMDns._devices)
+        d=tuple(AdbMDns._devices.items())
         AdbMDns.lock.release()
         return d
     @staticmethod
@@ -107,24 +112,27 @@ def adb_devices():
         for d in adb.device_list():
             serials.append(d.serial)
             yield d
-        for ip,serialno in AdbMDns.devices():
+        for serialno,ip in AdbMDns.devices():
             if ip not in serials and serialno not in serialnos:
                 output = adb.connect(ip)
-                print(output)
-                d = adb.device(serial=ip)
-                if serialno:
-                    d._properties[key_serialno]=serialno
-                serials.append(ip)
-                yield d
+                if re.match(f'^(already )?connected to {ip}',output):
+                    d = adb.device(serial=ip)
+                    if serialno:
+                        d._properties[key_serialno]=serialno
+                    serials.append(ip)
+                    yield d
+                else:
+                    print(output)
+                    # cannot connect to 10.1.1.1:100: No connection could be made because the target machine actively refused it. (10061)
     def devices_available():
         for d in devices():
             if d and d not in ds:
                 try:
-                    serialno = d.prop.get(key_serialno, cache=False) #check avaliable
-                    assert serialno
-                    model = d.prop.get("ro.product.model", cache=True) or ''
-                except Exception as e:
-                    print('adb_devices.devices_available',type(e),e)
+                    model = d.shell('getprop ro.product.model') or '' #check avaliable
+                    serialno = d.prop.get(key_serialno, cache=True) 
+                    if not serialno:
+                        raise AdbMDnsError(f'serialno {serialno}')
+                except:
                     continue
                 if serialno not in serialnos:
                     if serialno: serialnos.append(serialno)
@@ -137,7 +145,6 @@ def adb_devices():
         adb_devices.ds=ds
         return
 adb_devices.ds=[]
-
 
 class PairListener(ServiceListener):
     def update_service(self, zc: Zeroconf, type_: str, name: str) -> None:
@@ -162,6 +169,7 @@ class AdbPair:
         s=f'WIFI:T:ADB;S:{AdbPair.name};P:{AdbPair.passwd};;'
         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=20, border=2)
         qr.add_data(s)
+        qr.print_ascii(tty=True)
         self.img = qr.make_image(fill_color="black", back_color="white")
     @property
     def img_pil(self):
@@ -192,6 +200,7 @@ def ui_qt():
     class UiQrCode(QtWidgets.QDialog):
         def __init__(self,parent=None):
             super().__init__(parent)
+            self.setWindowTitle(f"adb pair")
             self.pair=adbdevices.AdbPair()
             img = QtGui.QPixmap()
             img.loadFromData(self.pair.img_buf.getvalue(), "PNG")
@@ -209,7 +218,7 @@ def ui_qt():
 def ui_cv():
     import cv2 as cv
     pair=adbdevices.AdbPair()
-    cv.imshow('pair',pair.img_cv) # pair.img_pil  QtGui.QPixmap.fromImage(pair.img_qt)
+    cv.imshow('pair',pair.img_cv)
     cv.waitKey(0) 
     cv.destroyAllWindows()
     pair.stop_pair()
@@ -217,12 +226,12 @@ def ui_cv():
 AdbMDns.start()
 adb_start_server()
 
+import sys
+adbdevices = sys.modules[__name__]
+# import adbdevices
 if __name__ == "__main__":
-    import sys
-    adbdevices = sys.modules[__name__]
     ui_qt()
     ui_cv()
-    # import adbdevices
     while True:
         try:
             for d,(serialno,model) in adbdevices.adb_devices():
