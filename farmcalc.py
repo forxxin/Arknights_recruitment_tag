@@ -513,6 +513,16 @@ class FarmCalc():
             if (item:=self.items.get(itemid)):
                 item.beststage=beststage
 
+    def get_san(self,itemid):
+        san = result[0][1] if (result:= (
+                self.result.get(itemid) 
+                or self.calc_multi(' '.join((self.server,self.minimize_stage_key,itemid))))
+        ) else 0
+        item=self.items.get(itemid)
+        if item and item.itemType=='CHIP':
+            san/=2 #chip san/2
+        return san
+
 if __name__ == '__main__':
     data=FarmCalc(server='US',minimize_stage_key='san',lang='en',update=False)
 
