@@ -1,5 +1,6 @@
 import os
 import re
+import pprint
 from dataclasses import dataclass
 
 from farmcalc import FarmCalc
@@ -12,42 +13,138 @@ except:
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 
-#Herbstmondeskonzert
-side_event_memory_store_raw = """
-module data b 1 75
-polyme prep 1 100
-nuc cry sint 1 100
-oriro concen 1 25
-orir bloc 1 40
-grinds penta 1 35
-polyme gel 1 30
-cutt flu solu 1 35
-tran salt agglo 1 30
-# pip orga liter stan 1 110
-# librar stair 1 90
-# scen e of know 1 90
-# knowle seek hall floor 1 90
-data supp instru 1 15
-polyes pac 1 15
-mangan ore 1 10
-coagu gel 1 12
-crysta compo 1 10
-lmd 5000 7
-stra batt rec 2 5
-tacti batt rec 2 3
-front batt reco 2 1
-skill sum - 3 1 4
-skill sum - 2 1 2
-oriro cub 1 2
-sugar 1 3
-polyes 1 3
-oriron 1 3
-polyk 1 3
-devic 1 4
-guard chi 1 6
-furni par 10 2
-lmd 20 1
-"""
+#
+shops_raw={
+('Herbstmondeskonzert', 'act29side_token_erin'): ['Headhunting Permit 3 150',
+                                               'Module Data Block 1 75',
+                                               'Polymerization Preparation 1 100',
+                                               'Nucleic Crystal Sinter 1 100',
+                                               'Orirock Concentration 1 25',
+                                               'Oriron Block 1 40',
+                                               'Grindstone Pentahydrate 1 35',
+                                               'Polymerized Gel 1 30',
+                                               'Cutting Fluid Solution 1 35',
+                                               'Transmuted Salt Agglomerate 1 30',
+                                               'Pipe Organ Literature Stand 1 110',
+                                               'Library Stairs 1 90',
+                                               "'Scenery of Knowledge' 1 90",
+                                               'Knowledge-Seeking Hall Flooring 1 90',
+                                               'Data Supplement Instrument 1 15',
+                                               'Data Supplement Stick 1 5',
+                                               'Polyester Pack 1 15',
+                                               'Manganese Ore 1 10',
+                                               'Coagulating Gel 1 12',
+                                               'Crystalline Component 1 10',
+                                               'LMD 5000 7',
+                                               'Strategic Battle Record 2 5',
+                                               'Tactical Battle Record 2 3',
+                                               'Frontline Battle Record 2 1',
+                                               'Skill Summary - 3 1 4',
+                                               'Skill Summary - 2 1 2',
+                                               'Orirock Cube 1 2',
+                                               'Sugar 1 3',
+                                               'Polyester 1 3',
+                                               'Oriron 1 3',
+                                               'Polyketon 1 3',
+                                               'Device 1 4',
+                                               'Guard Chip 1 6',
+                                               'Furniture Part 10 2',
+                                               'LMD 20 1'],
+# Commendations
+('Cert-Green', '4005'): ['★3 Recruitment Voucher I 1 200',
+                      '★4 Recruitment Voucher I 1 750',
+                      'Headhunting Permit 1 450',
+                      'Recruitment Permit 1 15',
+                      'Orirock Cluster 1 25',
+                      'Sugar Pack 1 30',
+                      'Polyester Pack 1 30',
+                      'Oriron Cluster 1 35',
+                      'Aketon 1 35',
+                      'Integrated Device 1 45',
+                      'Loxic Kohl 1 30',
+                      'Manganese Ore 1 35',
+                      'Grindstone 1 40',
+                      'RMA70-12 1 45',
+                      'Coagulating Gel 1 40',
+                      'Incandescent Alloy 1 35',
+                      'Crystalline Component 1 30',
+                      'Semi-Synthetic Solvent 1 40',
+                      'Compound Cutting Fluid 1 40',
+                      'Transmuted Salt 1 45',
+                      'Fuscous Fiber 1 40',
+                      'Aggregate Cyclicene 1 45'],
+# Headhunting Data Contract
+('Cert-Orange', 'EPGS_COIN'): ['Cyclicene Prefab 1 80',
+                            'Solidified Fiber Board 1 75',
+                            'Transmuted Salt Agglomerate 1 70',
+                            'Cutting Fluid Solution 1 70',
+                            'Refined Solvent 1 70',
+                            'Crystalline Circuit 1 90',
+                            'Incandescent Alloy Block 1 75',
+                            'Polymerized Gel 1 65',
+                            'RMA70-24 1 80',
+                            'Grindstone Pentahydrate 1 75',
+                            'Manganese Trihydrate 1 80',
+                            'White Horse Kohl 1 65',
+                            'Optimized Device 1 85',
+                            'Keton Colloid 1 85',
+                            'Oriron Block 1 90',
+                            'Polyester Lump 1 80',
+                            'Sugar Lump 1 75',
+                            'Orirock Concentration 1 60',
+                            'Aggregate Cyclicene 2 60',
+                            'Fuscous Fiber 2 55',
+                            'Transmuted Salt 2 55',
+                            'Compound Cutting Fluid 2 50',
+                            'Semi-Synthetic Solvent 2 50',
+                            'Crystalline Component 2 40',
+                            'Incandescent Alloy 2 40',
+                            'Coagulating Gel 2 50',
+                            'RMA70-12 2 60',
+                            'Grindstone 2 50',
+                            'Manganese Ore 2 45',
+                            'Loxic Kohl 2 40',
+                            'Integrated Device 2 60',
+                            'Aketon 2 45',
+                            'Oriron Cluster 2 45',
+                            'Polyester Pack 2 35',
+                            'Sugar Pack 2 35',
+                            'Orirock 2 30',
+                            'Device 4 40',
+                            'Polyketon 4 30',
+                            'Oriron 4 30',
+                            'Polyester 4 25',
+                            'Sugar 4 25',
+                            'Orirock Cube 4 15',
+                            'Damaged Device 8 40',
+                            'Diketon 8 30',
+                            'Oriron Shard 8 30',
+                            'Ester 8 25',
+                            'Sugar Substitute 8 25',
+                            'Orirock 8 15'],
+# Intelligence Certification
+('Cert-Purple', 'REP_COIN'): ['Orundum 100 20',
+                           'Optimized Device 1 85',
+                           'Orirock Concentration 1 50',
+                           'Keton Colloid 1 65',
+                           'Sugar Lump 1 60',
+                           'Oriron Block 1 70',
+                           'Polyester Lump 1 60',
+                           'Grindstone Pentahydrate 1 60',
+                           'Manganese Trihydrate 1 60',
+                           'Incandescent Alloy Block 1 60',
+                           'Polymerized Gel 1 50',
+                           'RMA70-24 1 65',
+                           'Crystalline Circuit 1 70',
+                           'White Horse Kohl 1 50',
+                           'Refined Solvent 1 55',
+                           'Cutting Fluid Solution 1 55',
+                           'Transmuted Salt Agglomerate 1 55',
+                           'LMD 2000 15',
+                           'Strategic Battle Record 1 15',
+                           'Skill Summary - 3 1 20'],
+    ('',''):"""""",
+}
 
 @dataclass
 class StoreItem:
@@ -58,13 +155,15 @@ class StoreItem:
     token_cost:int
     san_per_item:float
     san_per_token:float
+    raw:str
 
 class Store():
     def __init__(self,server='US',minimize_stage_key='',lang='en',update=False):
         self.server=server
         self.minimize_stage_key=minimize_stage_key
         self.data=FarmCalc(server,minimize_stage_key,lang,update)
-        self.side_event_memory_store=self.gen_store(side_event_memory_store_raw)
+        self.furnitures=resource.GameData.json_data('building').get('customData',{}).get('furnitures',{})
+        self.stores,self.stores_sorted=self.gen_stores(shops_raw)
     def gen_item(self,name_raw):
         if name_raw.startswith('#'):
             return name_raw
@@ -75,13 +174,38 @@ class Store():
             name_=name.lower().split()
             if len(name_)==len(name_raw_) and all(i.startswith(r) for i,r in zip(name_,name_raw_)):
                 items.append(item)
+        for furnitureid,furniture in self.furnitures.items():
+            name=furniture.get('name')
+            name_=name.lower().split()
+            if len(name_)==len(name_raw_) and all(i.startswith(r) for i,r in zip(name_,name_raw_)):
+                items.append(name)
         if len(items)==1:
             return items[0]
-        else:
-            raise Exception(name_raw,items)
-    def gen_store(self,store_raw):
+        raise Exception(name_raw,[item.name for item in items])
+    def gen_stores(self,shops_raw):
+        stores={}
+        stores_sorted={}
+        self.shops_raw_={}
+        for store_info_raw,store_raw in shops_raw.items():
+            store_name,store_icon_itemid=store_info_raw
+            if not store_name: continue
+            store_icon=resource.ItemImg.img(store_icon_itemid)
+            store_info=store_name,store_icon
+            store,store_sorted = self.gen_store(store_raw,store_info)
+            stores[store_info] = store
+            stores_sorted[store_info] = store_sorted
+            self.shops_raw_[store_info_raw] = [store_item.raw for store_item in store]
+        return stores,stores_sorted
+    def gen_store(self,store_raw,store_info):
+        # def get_san(itemid):
+            # return result[0][1] if (result:= (
+                    # self.data.result.get(itemid) 
+                    # or self.data.calc_multi(' '.join((self.server,self.minimize_stage_key,itemid))))
+            # ) else 0
+        if isinstance(store_raw,str):
+            store_raw=store_raw.splitlines()
         store=[]
-        for line in store_raw.splitlines():
+        for line in store_raw:
             line=line.strip()
             if line=='':
                 continue
@@ -89,44 +213,44 @@ class Store():
                 name_raw = m.group('name_raw')
                 item = self.gen_item(name_raw)
                 name=getattr(item,'name',item)
-                itemId=getattr(item,'id','')
-                def get_san(itemid):
-                    return result[0][1] if (result:= (
-                            self.data.result.get(itemid) 
-                            or self.data.calc_multi(' '.join((self.server,self.minimize_stage_key,itemid))))
-                    ) else 0
-                if itemId=='4001': #LMD
-                    san = get_san('gold') 
-                    print('gold',san)
-                elif itemId in FarmCalc.item_exp: #Battle Record
-                    san = get_san('exp')
-                    print('exp',san)
-                elif itemId:
-                    san = get_san(itemId)
-                if getattr(item,'itemType','')=='MATERIAL' and 'Chip' in name:
-                    san/=2 #chip san/2
-                if itemId in FarmCalc.item_exp:
-                    count = int(m.group('count'))*FarmCalc.item_exp.get(itemId)
-                else:
-                    count = int(m.group('count'))
+                count = int(m.group('count'))
                 token_cost = int(m.group('token_cost'))
+                raw=f'{name} {count} {token_cost}'
+                itemId=getattr(item,'id','')
+                if itemId=='4001': #LMD
+                    san = self.data.get_san('gold') 
+                elif itemId in FarmCalc.item_exp: #Battle Record
+                    san = self.data.get_san('exp')
+                elif itemId:
+                    san = self.data.get_san(itemId)
+                else:
+                    san = 0
+                if itemId in FarmCalc.item_exp:
+                    count*=FarmCalc.item_exp.get(itemId)
                 obj=StoreItem(
-                    store='Herbstmondeskonzert',
+                    store=store_info,
                     name=name,
                     itemId=itemId,
                     count=count,
                     token_cost=token_cost,
                     san_per_item=round(san,2),
                     san_per_token =round(san*count/token_cost,2),
-                ) 
+                    raw=raw,
+                )
                 store.append(obj)    
             else:
                 raise Exception(line)
-        return sorted(store,key=lambda storeitem:storeitem.san_per_token,reverse=True)
+        return store,sorted(store,key=lambda storeitem:storeitem.san_per_token,reverse=True)
     def print(self):
-        for store_item in self.side_event_memory_store:
-            print(store_item.name,store_item.count,store_item.token_cost,store_item.san_per_token)
+        for name,store in self.stores.items():
+            print(name)
+            for store_item in store:
+                print(store_item.name,store_item.count,store_item.token_cost,store_item.san_per_token)
+        for name,store in self.stores_sorted.items():
+            print(name)
+            for store_item in store:
+                print(store_item.name,store_item.count,store_item.token_cost,store_item.san_per_token)
 
 if __name__ == "__main__":
     data=Store(server='US',minimize_stage_key='san',lang='en',update=False)
-    data.print()
+    pprint.pprint(data.shops_raw_, width=100)
