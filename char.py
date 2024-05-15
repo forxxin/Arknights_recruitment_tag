@@ -6,6 +6,15 @@ import os
 import pandas as pd
 
 import resource
+from tier import char_tier_gamepress
+# from levelplot import (
+    # max_level,
+    # max_e,
+    # max_elevel,
+    # cost2,
+# )
+
+
 
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
@@ -59,6 +68,8 @@ class Character:
     # allSkillLvlup:list
     # trait:dict
     # displayTokenDict:dict
+    evolveCost:list
+    tier:int
     def __repr__(self):
         s=f'Character({self.name})'
         return s
@@ -73,8 +84,10 @@ class CharacterExcel:
     profession:str
     subProfessionId:str
     position:str
-    rarity:str
-    tags:frozenset
+    rarity:int
+    tags:str
+    evolveCost:str
+    tier:int
     @classmethod
     def from_character(cls, char):
         return cls(
@@ -84,7 +97,9 @@ class CharacterExcel:
             subProfessionId=char.subProfessionId.title(),
             position=char.position.title(),
             rarity=char.rarity,
-            tags=char.tags,
+            tags=str(sorted(list(char.tags))),
+            evolveCost=str(char.evolveCost),
+            tier=char.tier,
         )
 
 def subset(items,maxtag=5,self=0):
@@ -136,6 +151,7 @@ class Chars:
         tag_profession = set()
         tag_position = set()
         tag_tagList = set()
+        tiers=char_tier_gamepress()
         def gen_tags(char_data):
             tags=char_data.get('tagList') or []
             profession=char_data.get('profession')
@@ -149,8 +165,8 @@ class Chars:
             tags.append(profession_name)
             tags.append(position_name)
             return frozenset(tags)
-        # def gen_rarity(char_data):
-            # return int(char_data.get('rarity')[-1:])
+        def gen_rarity(char_data):
+            return resource.rarity_int(char_data.get('rarity'))
         def gen_img(name_url,char_id):
             return resource.CharImg.img(char_id,name_url)
         def recruitable(char_id):
@@ -161,27 +177,48 @@ class Chars:
                 if resource.json_tl('akhr').get(char_id) and resource.json_tl('akhr').get(char_id,{}).get('globalHidden')!=True:
                     return True
             return False
+        def evolve_cost(char_data):
+            # rarity=gen_rarity(char_data)
+                # max_level(rarity)
+                # max_e(rarity)
+                # e,level=max_elevel(rarity)
+                # cost2()
+            # for e,maxlevel in max_level(rarity):
+                # for level in range(1,maxlevel+1): 
+            cost=[]
+            for e,phase in enumerate(char_data.get('phases')):
+                assert phase.get('evolveCost')==None if e==0 else True
+                cost.append([(item.get('id'), item.get('count')) for item in (phase.get('evolveCost') or [])])
+            assert cost[0]==[]
+            return cost[1:]
+        def gen_tier(name):
+            return tiers.get(name)
         for char_id,char_data in character_table.items():
             if (
                 'notchar' in char_data.get('subProfessionId')
                 or char_data.get('profession') in ['TOKEN','TRAP']
             ):
                 continue
+            name=char_data.get('name')
+            # print(name)
             char=Character(
                 characterId=char_id,
-                name=char_data.get('name'),
+                name=name,
                 profession=char_data.get('profession'),
                 subProfessionId=char_data.get('subProfessionId'),
                 position=char_data.get('position'),
                 tags=gen_tags(char_data),
-                rarity=resource.rarity_int(char_data.get('rarity')),
+                rarity=gen_rarity(char_data),
                 avatar=gen_img(resource.CharImg.name_avatar,char_id),
                 # avatar2=gen_img(resource.CharImg.name_avatar2,char_id),
                 # portrait=gen_img(resource.CharImg.name_portrait,char_id),
                 # portrait2=gen_img(resource.CharImg.name_portrait2,char_id),
                 itemObtainApproach=char_data.get('itemObtainApproach') or '',
                 recruitable=recruitable(char_id),
+                evolveCost=evolve_cost(char_data),
+                tier=gen_tier(name),
             )
+            # print(char.evolveCost)
             self.chars[char_id]=char
         self.chars = {k:v for k,v in sorted(self.chars.items(), key=lambda item:(-item[1].rarity,item[1].name))}
         self.all_tags = [tag_profession,tag_position,tag_tagList]
@@ -221,7 +258,7 @@ class Chars:
         print(df)
 
 if __name__ == "__main__":
-    data=Chars()
+    data=Chars(server='US',lang='en')
     data.save_excel()
     
     # tags = ['减速','控场','费用回复','特种','远程位',]
