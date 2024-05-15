@@ -5,7 +5,8 @@ import re
 from PyQt6 import QtWidgets, QtGui, QtCore
 
 from ui_farm_stages import UiFarmStage
-from ui_stores import UiFarmStageStore
+from ui_stores import UiStores
+from ui_char import UiChars
 from ui_rec_tags import UiRecTag
 from qtlayout import MyGridLayout,MyVBoxLayout,MyHBoxLayout
 try:
@@ -33,7 +34,8 @@ class UiRoot(QtWidgets.QMainWindow):
         vlayout = MyVBoxLayout()
         self.ui_args = UiArgs()
         self.ui_farm = UiFarmStage(self.ui_args.args_farm())
-        self.ui_stores = UiFarmStageStore(self.ui_args.args_farm())
+        self.ui_stores = UiStores(self.ui_args.args_store())
+        self.ui_char = UiChars(self.ui_args.args_char())
         self.ui_recr_key,args = self.key_ui_recr()
         ui_recr = UiRecTag(args)
         self.load_pos()
@@ -41,6 +43,7 @@ class UiRoot(QtWidgets.QMainWindow):
         self.tabs.addTab(tab0,'Best Stages')
         tab0.setLayout(vlayout)
         self.tabs.addTab(self.ui_stores,'Stores Priority')
+        self.tabs.addTab(self.ui_char,'Characters')
         vlayout.addWidget(self.ui_args)
         vlayout.addWidget(self.ui_farm)
         self.tabs.addTab(ui_recr,'Recruit Tag')
@@ -169,8 +172,12 @@ class UiArgs(QtWidgets.QWidget):
         return {name:comb.currentText() for name,comb in self.combs.items()}
     def args_farm(self):
         return {name:comb.currentText() for name,comb in self.combs.items() if name in ['server','minimize_stage_key','lang','show']}
+    def args_store(self):
+        return {name:comb.currentText() for name,comb in self.combs.items() if name in ['server','minimize_stage_key','lang']}
     def args_recr(self):
         return {name:comb.currentText() for name,comb in self.combs.items() if name in ['server','lang']}
+    def args_char(self):
+        return self.args_recr()
     def save_pos(self):
         d=[comb.currentText() for name,comb in self.combs.items()]
         saveobj.save_json(self.config,d)
