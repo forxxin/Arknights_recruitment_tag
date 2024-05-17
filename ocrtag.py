@@ -198,7 +198,7 @@ def img_roi(img):
     th = cv.bitwise_or(th, th1)
     th = cv.bitwise_or(th, th2)
     contours, hier = cv.findContours(th, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-    contours_list = [(contour,cv.boundingRect(contour)) for contour in contours if cv.contourArea(contour)>1000]
+    contours_list = [(contour,cv.boundingRect(contour)) for contour in contours if cv.contourArea(contour)>900]
     # cv.imshow('img',th)
     # cv.waitKey(0)
     # cv.destroyAllWindows()
@@ -220,7 +220,27 @@ def save_img(file,img):
 def ocr_img(alltag,img,roi):
     x,y,w,h=roi
     img_crop=img[y:y+h,x:x+w]
-    tag_ocrs = pytesseract.image_to_string(img_crop)
+    psm=6
+    if 'Caster' in alltag:
+        tag_ocrs = pytesseract.image_to_string(img_crop, lang='eng', config=f'--psm {psm}')
+    else:
+        tag_ocrs = pytesseract.image_to_string(img_crop, config=f'--psm {psm}')
+    ''' Page segmentation modes:
+    0    Orientation and script detection (OSD) only.
+    1    Automatic page segmentation with OSD.
+    2    Automatic page segmentation, but no OSD, or OCR.
+    3    Fully automatic page segmentation, but no OSD. (Default)
+    4    Assume a single column of text of variable sizes.
+    5    Assume a single uniform block of vertically aligned text.
+    6    Assume a single uniform block of text.
+    7    Treat the image as a single text line.
+    8    Treat the image as a single word.
+    9    Treat the image as a single word in a circle.
+    10    Treat the image as a single character.
+    11    Sparse text. Find as much text as possible in no particular order.
+    12    Sparse text with OSD.
+    13    Raw line. Treat the image as a single text line, bypassing hacks that are Tesseract-specific.
+    '''           
     tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS').replace('pps','DPS')
     taglow_tag = {tag.lower():tag for tag in sorted(alltag, key=len, reverse=True)}
     tags=[]
@@ -234,8 +254,11 @@ def ocr_img(alltag,img,roi):
         print(tag_ocrs)
     else:
         print((tag_ocrs,))
-    if tags and SAVE_ROIIMG:
-        save_img(f"tmp/ocr_img/{'_'.join(tags)}_{int(time.time())}.png",img_crop)
+    if SAVE_ROIIMG:
+        if tags:
+            save_img(f"tmp/ocr_img/{'_'.join(tags)}_{int(time.time())}.png",img_crop)
+        # else:
+            # save_img(f"tmp/ocr_img1/{tag_ocrs}_{int(time.time())}.png",img_crop)
     return tags
 
 def adb_tag(alltag,img_anhrtags,setup=False):
