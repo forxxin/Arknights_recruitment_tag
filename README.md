@@ -25,27 +25,27 @@
 ```python furniture.py```
 | side story                               | furniture store                             | in store   | full   | amb   | cost   | amb/cost   |
 |------------------------------------------|---------------------------------------------|------------|--------|-------|--------|------------|
-| Mansfield Break                          | Mansfield Prison Cell                       | 1          | 0      | 5000  | 1225   | 4.082      |
+| Mansfield Break(36)                      | Mansfield Prison Cell                       | 1          | 0      | 5000  | 1225   | 4.082      |
 | # Break the Ice                          | Kjerag-Style Inn                            |            |        | 5000  | 1380   | 3.623      |
 | # Lingering Echoes                       | Afterglow-Styled Music Room                 |            |        | 5000  | 1515   | 3.3        |
 |                                          | Stultifera Navis Reception Room             |            |        | 5000  | 1520   | 3.289      |
 | # Invitation to Wine                     | Shan-Ch'eng Teahouse                        |            |        | 5000  | 1620   | 3.086      |
 | # Dorothy's Vision                       | Rhine Experimental Culture Pod              |            |        | 5000  | 1650   | 3.03       |
-| Near Light                               | Kazimierz Broadcast Center                  | 1          | 0      | 5000  | 1700   | 2.941      |
-| Who is Real                              | Tan-Ch'ing Court                            | 1          | 0      | 5000  | 1795   | 2.786      |
-| Under Tides                              | Iberian Resort Town                         | 1          | 0      | 5000  | 1810   | 2.762      |
-| Darknights Memoir                        | Seven Cities-style Restaurant               | 1          | 0      | 5000  | 1875   | 2.667      |
-| Maria Nearl                              | Nearls' Living Room Replica                 | 1          | 0      | 5000  | 1885   | 2.653      |
-| A Walk in the Dust                       | Critical Response Team Office               | 1          | 0      | 5000  | 2015   | 2.481      |
+| Near Light(46)                           | Kazimierz Broadcast Center                  | 1          | 0      | 5000  | 1700   | 2.941      |
+| Who is Real(36)                          | Tan-Ch'ing Court                            | 1          | 0      | 5000  | 1795   | 2.786      |
+| Under Tides(35)                          | Iberian Resort Town                         | 1          | 0      | 5000  | 1810   | 2.762      |
+| Darknights Memoir(31)                    | Seven Cities-style Restaurant               | 1          | 0      | 5000  | 1875   | 2.667      |
+| Maria Nearl(40)                          | Nearls' Living Room Replica                 | 1          | 0      | 5000  | 1885   | 2.653      |
+| A Walk in the Dust(32)                   | Critical Response Team Office               | 1          | 0      | 5000  | 2015   | 2.481      |
 | # Guide Ahead                            | Laterano Notarial Hall Lounge               |            |        | 5000  | 2045   | 2.445      |
 | # Operation Originium Dust               | Special Equipment Exhibition Room           |            |        | 5000  | 2045   | 2.445      |
-| Grani and the Knights' Treasure          | Express Chain Pizzeria                      |            |        | 5000  | 2120   | 2.358      |
-| Twilight of Wolumonde                    | Leithanian Nights                           | 1          | 0      | 5000  | 2190   | 2.283      |
-| Dossoles Holiday                         | Dossoles Private Spa                        | 1          | 0      | 5000  | 2240   | 2.232      |
+| Grani and the Knights' Treasure(24)      | Express Chain Pizzeria                      |            |        | 5000  | 2120   | 2.358      |
+| Twilight of Wolumonde(40)                | Leithanian Nights                           | 1          | 0      | 5000  | 2190   | 2.283      |
+| Dossoles Holiday(39)                     | Dossoles Private Spa                        | 1          | 0      | 5000  | 2240   | 2.232      |
 | # Ideal City: Endless Carnival           | Great Aquapit Funtastic Experientorium      |            |        | 5000  | 2250   | 2.222      |
-| Heart of Surging Flame                   | Modern Music Rehearsal Room                 | 1          | 0      | 5300  | 2520   | 2.103      |
-| The Great Chief Returns                  | Tribal-Style Inn                            | 1          | 0      | 5000  | 2415   | 2.07       |
-| Code of Brawl                            | Penguin Logistics Safehouse                 | 1          | 0      | 5000  | 3500   | 1.429      |
+| Heart of Surging Flame(40)               | Modern Music Rehearsal Room                 | 1          | 0      | 5300  | 2520   | 2.103      |
+| The Great Chief Returns(36)              | Tribal-Style Inn                            | 1          | 0      | 5000  | 2415   | 2.07       |
+| Code of Brawl(45)                        | Penguin Logistics Safehouse                 | 1          | 0      | 5000  | 3500   | 1.429      |
 |                                          | No.12 Life Cycle Cabin                      |            |        | 3045  | 2825   | 1.078      |
 |                                          | Side Line/ Simple Orange Furniture          |            |        | 2035  | 1945   | 1.046      |
 |                                          | Side Line/ Simple Black-and-white Furniture |            |        | 2035  | 1945   | 1.046      |
@@ -69,6 +69,7 @@
 | # Hortus de Escapismo                    | Ambulacrum Ambrosii                         |            |        |       |        |            |
 | # So Long, Adele: Home Away From Home    | Trip to the 'White Volcano'                 |            |        |       |        |            |
 | # Zwillingstürme im Herbst               | Ludwigs-Universität Lecture Hall            |            |        | 5000  |        |            |
+
 
 ## Install
 Install Python 3.12.2
