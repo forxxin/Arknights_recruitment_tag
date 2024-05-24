@@ -6,6 +6,7 @@ from functools import cache
 from dataclasses import dataclass
 import copy
 import re
+import threading
 
 try:
     from scipy.optimize import linprog
@@ -126,7 +127,8 @@ class Stage:
     def __str__(self):
         return f'{self.name}|{self.danger_level}: {self.san}San = {str_itemlist(self.outs)}'
     def normaldrops(self):
-        return [self.items[itemId] for itemId in self.normal_drop]
+        return self.normal_drop
+        # return [self.items[itemId] for itemId in self.normal_drop]
 
 @dataclass
 class ItemType():
@@ -179,7 +181,38 @@ class Req:
         str_exp=f'{self.exp}Exp' if self.exp else ''
         return f'Req: {' + '.join([i for i in [str_gold,str_exp,str_itemlist(self.reqs)] if i])}'
 
-class FarmCalc():
+class CacheInstType(type):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lock = threading.Lock()
+        self.instances={}
+        self.locks={}
+    # def __call__(self, server='US',minimize_stage_key='',lang='en',update=False):
+        # key=(server,minimize_stage_key,lang,update)
+        # with self.lock:
+            # if key in self.instances:
+                # return self.instances[key]
+            # else:
+                # instance = super().__call__(server=server,minimize_stage_key=minimize_stage_key,lang=lang,update=update)
+                # self.instances[key]=instance
+                # return instance
+    def __call__(self, server='US',minimize_stage_key='',lang='en',update=False):
+        key=(server,minimize_stage_key,lang,update)
+        with self.lock:
+            if key in self.locks:
+                lock=self.locks[key]
+            else:
+                lock=threading.Lock()
+                self.locks[key]=lock
+        with lock:
+            with self.lock:
+                if key in self.instances:
+                    return self.instances[key]
+            instance = super().__call__(server=server,minimize_stage_key=minimize_stage_key,lang=lang,update=update)
+            with self.lock:
+                self.instances[key]=instance
+                return instance
+class FarmCalc(metaclass=CacheInstType):
     now = datetime.now().timestamp()*1000
     item_exp={
         '2001':200,
@@ -227,7 +260,7 @@ class FarmCalc():
         self.items_all={}
         self.stages={}
         self.formulas={}
-        print('FarmCalc.__init__',server,minimize_stage_key,lang)
+        print('FarmCalc.__init__',id(self),server,minimize_stage_key,lang)
         stages,penguin_stats_items,stageitems,formulas = resource.penguin_stats(server,update=update)
         self._item_table = resource.GameData.json_table('item', lang=self.lang2)
         self.prep_penguin_stats_items(penguin_stats_items)
@@ -523,14 +556,22 @@ class FarmCalc():
             san/=2 #chip san/2
         return san
 
+@cache # not support mult thread
+def make_FarmCalc(**kwargs):
+    return FarmCalc(**kwargs)
+
 if __name__ == '__main__':
     data=FarmCalc(server='US',minimize_stage_key='san',lang='en',update=False)
-
+    
+    # data=make_FarmCalc(server='US',minimize_stage_key='san',lang='en',update=False)
+    # data1=make_FarmCalc(server='US',minimize_stage_key='san',lang='en',update=False)
+    # print(id(data),id(data1))
+    # exit()
+    
     # print(*[str(i) for i in self.items.values()],sep='\n')
     # print(*[str(i) for i in self.stages.values()],sep='\n')
     # print(*[str(i) for i in self.formulas.values()],sep='\n')
     # print_items()
-
     stages_all=[]
     min_san=None
     i=1

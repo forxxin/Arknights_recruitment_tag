@@ -319,6 +319,7 @@ class UiFarmStage(QtWidgets.QWidget):
                     n=item.n/item_out.n
                     if imgitem and imgitem1:
                         arrow=UiFormulaArrow(imgitem,imgitem1,arrowcolor[formula.id],n)
+                        imgitem1.onselected.connect(arrow.changepenwidth)
                         view.addarrow(arrow)
         for imgitem in imgitems.values():
             view.addimg(imgitem)
@@ -411,11 +412,12 @@ class UiItemImg1(QtWidgets.QGraphicsItem):
     def boundingRect(self):
         return QtCore.QRectF(0,0,UiItemImg.len,UiItemImg.len)
 
-class UiItemImg(QtWidgets.QGraphicsItem):
+class UiItemImg(QtWidgets.QGraphicsObject):
     n=3
     len=80
     len1=66
     wordlen=11
+    onselected = QtCore.pyqtSignal(bool)
     def __init__(self, item,parent=None):
         super().__init__(parent)
         self.x=0
@@ -442,6 +444,14 @@ class UiItemImg(QtWidgets.QGraphicsItem):
             painter.drawText(0,UiItemImg.len+UiItemImg.wordlen*(2+idx),s)
     def boundingRect(self):
         return QtCore.QRectF(0,0,UiItemImg.len,UiItemImg.len)
+    def itemChange(self,change,value):
+        if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            # print('selection emission',value)
+            if value: # 1 select
+                self.onselected.emit(True)
+            else: #0 deselect
+                self.onselected.emit(False)
+        return super().itemChange(change,value)
 
 class UiGraphicsView(QtWidgets.QGraphicsView):
     xsd=10
@@ -519,13 +529,17 @@ class UiGraphicsView(QtWidgets.QGraphicsView):
     def closeEvent(self,event):
         self.save_pos()
 
-class UiFormulaArrow(QtWidgets.QGraphicsItem):
+class UiFormulaArrow(QtWidgets.QGraphicsObject): # QGraphicsObject Inherits: QObject QGraphicsItem
     def __init__(self, startItem, endItem,color,n,parent=None):
         super().__init__(parent)
         self.startItem = startItem
         self.endItem = endItem
         self.color=color
         self.n=n
+        self.pen=QtGui.QPen()
+        self.pen.setWidth(1)
+        self.pen.setColor(QtGui.QColor(self.color)) #https://doc.qt.io/qtforpython-5/PySide2/QtGui/QColorConstants.html
+        self.fontsize=1
     def boundingRect(self):
         p1 = self.startItem.pos() + self.startItem.boundingRect().center()
         p3 = self.endItem.pos() + self.endItem.boundingRect().center()
@@ -535,11 +549,20 @@ class UiFormulaArrow(QtWidgets.QGraphicsItem):
     def paint(self, painter, option, widget=None):
         p1 = self.startItem.pos() + self.startItem.boundingRect().center()
         p3 = self.endItem.pos() + self.endItem.boundingRect().center()
-        pen = QtGui.QPen()
-        pen.setColor(QtGui.QColor(self.color)) #https://doc.qt.io/qtforpython-5/PySide2/QtGui/QColorConstants.html
-        painter.setPen(pen)
+        painter.setPen(self.pen)
+        font = painter.font()
+        font.setPointSize(int(font.pointSize() * self.fontsize))
+        painter.setFont(font)
         painter.drawLine(QtCore.QLineF(p1, p3))
         painter.drawText((p1+p3)/2,f'{self.n:g}')
+    @QtCore.pyqtSlot(bool)
+    def changepenwidth(self,selected):
+        if selected:
+            self.pen.setWidth(5)
+            self.fontsize=2.2
+        else:
+            self.pen.setWidth(1)
+            self.fontsize=1
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])

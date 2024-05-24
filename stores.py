@@ -15,7 +15,52 @@ os.chdir(app_path)
 
 #
 shops_raw={
-('Herbstmondeskonzert', 'act29side_token_erin'): ['Headhunting Permit 3 150',
+('Dipartimento', 'act21side_token_permesso'):
+                                                ['Headhunting Permit 1 150',
+                                                'Bipolar Nanoflake 1 100',
+                                                'Crystalline Electronic Unit 1 100',
+                                                'Refined Solvent 1 35',
+                                                'Incandescent Alloy Block 1 35',
+                                                'Keton Colloid 1 35',
+                                                'Manganese Trihydrate 1 35',
+                                                # 'Module Data Block 1 75',
+                                                # 'Polymerization Preparation 1 100',
+                                                # 'Nuclock Concentration 1 25',
+                                                # 'Oriron Block 1 40',
+                                                # 'Grieic Crystal Sinter 1 100',
+                                                # 'Orirndstone Pentahydrate 1 35',
+                                                'Polymerized Gel 1 30',
+                                                'Orirock Concentration 1 25',
+                                                # 'Cutting Fluid Solution 1 35',
+                                                # 'Transmuted Salt Agglomerate 1 30',
+                                                "'Truck Passage' 1 110",
+                                                'Patching Planks 1 90',
+                                                'Wooden Coat Hanger 1 90',
+                                                'Public Bookshelf 1 85',
+                                                # 'Data Supplement Instrument 1 15',
+                                                # 'Data Supplement Stick 1 5',
+                                                'Sugar Pack 1 8',
+                                                'RMA70-12 1 15',
+                                                # 'Polyester Pack 1 15',
+                                                # 'Manganese Ore 1 10',
+                                                # 'Coagulating Gel 1 12',
+                                                # 'Crystalline Component 1 10',
+                                                'LMD 5000 7',
+                                                'Strategic Battle Record 2 5',
+                                                'Tactical Battle Record 2 3',
+                                                'Frontline Battle Record 2 1',
+                                                'Skill Summary - 3 1 4',
+                                                'Skill Summary - 2 1 2',
+                                                'Orirock Cube 1 2',
+                                                # 'Sugar 1 3',
+                                                # 'Polyester 1 3',
+                                                'Oriron 1 3',
+                                                'Polyketon 1 3',
+                                                # 'Device 1 4',
+                                                'Vanguard Chip 1 6',
+                                                # 'Furniture Part 10 2',
+                                                'LMD 20 1'],
+('Herbstmondeskonzert', 'act29side_token_erin','skip'): ['Headhunting Permit 1 150',
                                                'Module Data Block 1 75',
                                                'Polymerization Preparation 1 100',
                                                'Nucleic Crystal Sinter 1 100',
@@ -143,6 +188,22 @@ shops_raw={
                            'LMD 2000 15',
                            'Strategic Battle Record 1 15',
                            'Skill Summary - 3 1 20'],
+('Credit','SOCIAL_PT'):"""
+oriron 2 240
+Polyketon 2 240
+Carbon Brick 3 200
+Device 1 160
+Recruitment Permit 1 160
+LMD 3600 200
+Oriron 2 240
+Expedited Plan 1 160
+Orirock Cube 3 200
+Furniture Part 25 200
+Sugar 2 200
+Polyester 2 200
+Skill Summary - 2 3 200
+Frontline Battle Record 9 200
+    """,
     ('',''):"""""",
 }
 
@@ -161,7 +222,7 @@ class Store():
     def __init__(self,server='US',minimize_stage_key='',lang='en',update=False):
         self.server=server
         self.minimize_stage_key=minimize_stage_key
-        self.data=FarmCalc(server,minimize_stage_key,lang,update)
+        self.data=FarmCalc(server=server,minimize_stage_key=minimize_stage_key,lang=lang,update=update)
         self.furnitures=resource.GameData.json_data('building').get('customData',{}).get('furnitures',{})
         self.stores,self.stores_sorted=self.gen_stores(shops_raw)
     def gen_item(self,name_raw):
@@ -187,6 +248,8 @@ class Store():
         stores_sorted={}
         self.shops_raw_={}
         for store_info_raw,store_raw in shops_raw.items():
+            if len(store_info_raw)>2:
+                continue
             store_name,store_icon_itemid=store_info_raw
             if not store_name: continue
             store_icon=resource.ItemImg.img(store_icon_itemid)

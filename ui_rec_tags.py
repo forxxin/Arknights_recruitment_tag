@@ -7,6 +7,7 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from qtlayout import MyGridLayout,MyVBoxLayout,MyHBoxLayout
 from char import Chars
 from ocrtag import win_tag,adb_tag,adb_kill
+from tier import char_tier
 try:
     import adbdevices
 except:
@@ -40,10 +41,12 @@ class UiTag(QtWidgets.QLabel):
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,QtWidgets.QSizePolicy.Policy.Minimum)
 
 class UiChar(QtWidgets.QLabel):
+    tiers=char_tier()
     def __init__(self,data,char,parent=None):
         super().__init__(parent)
         self.data=data
-        self.setText(char.name)
+        tier=UiChar.tiers.get(char.name,'?')
+        self.setText(f'{char.name}.T{tier}')
         color = self.data.rarity_color.get(char.rarity)
         self.setStyleSheet(f"QLabel{{background-color:{color};color:black;}}")
         self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,QtWidgets.QSizePolicy.Policy.Minimum)

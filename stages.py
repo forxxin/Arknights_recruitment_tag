@@ -15,6 +15,7 @@ app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 
 class Data:
+    data={}
     stages={}
 
 @dataclass
@@ -55,11 +56,11 @@ def prep_stages():
         ) for stageId,d in resource.GameData.json_table('stage').get('stages',{}).items()}
     stageid_tran={}
     bestdrop={}
-    for itemid,stages_all in farmcalc.best_stages().items():
+    for itemid,stages_all in Data.data.result.items():
         for beststages,san in stages_all:
             for stage in beststages:
                 stageid_tran[stage.id.replace('_perm','')] = stage.id
-                bestdrop[stage.id.replace('_perm','')]=farmcalc.Data.items.get(itemid)
+                bestdrop[stage.id.replace('_perm','')]=Data.data.items.get(itemid)
             break
     for stageId,stage in res.items():
         activityId = zoneId2activityId().get(stage.zoneId)
@@ -69,7 +70,7 @@ def prep_stages():
         best_stages = [d for s,d in res.items() if d.id in stageid_tran]
         for stage in best_stages:
             stage_id = stageid_tran.get(stage.id)
-            stage.normaldrops = [item.name for item in farmcalc.Data.stages[stage_id].normaldrops()]
+            stage.normaldrops = [Data.data.items[itemid].name for itemid in Data.data.stages[stage_id].normaldrops()]
             stage.bestdrop = bestdrop[stage.id]
     return res
 
@@ -95,7 +96,7 @@ def activitys():
 
 def print_best(minimize_stage_key='san'):
     stageid_tran={}
-    for itemid,stages_all in farmcalc.best_stages(minimize_stage_key=minimize_stage_key).items():
+    for itemid,stages_all in Data.data.result.items():
         for beststages,san in stages_all:
             for stage in beststages:
                 stageid_tran[stage.id.replace('_perm','')] = stage.id
@@ -103,7 +104,7 @@ def print_best(minimize_stage_key='san'):
     print(f'minimize_stage_key: {minimize_stage_key}')
     def stage_str(stage):
         stage_id = stageid_tran.get(stage.id)
-        normaldrops = farmcalc.Data.stages[stage_id].normaldrops()
+        normaldrops = [Data.data.items[itemid] for itemid in Data.data.stages[stage_id].normaldrops()]
         bestdrop = stage.bestdrop
         if bestdrop in normaldrops:
             return stage.code+f'[{bestdrop.name}]{bestdrop.rarity}'
@@ -131,7 +132,8 @@ def print_best(minimize_stage_key='san'):
     return {activity_name:stages_ for activity_name,stages_ in activity_stages.items() if stages_}, stageType_stages
 
 if __name__ == '__main__':
-    farmcalc.init(server='US',minimize_stage_key='san',lang='en',update=False)
+    Data.data=farmcalc.FarmCalc(server='US',minimize_stage_key='san',lang='en',update=False)
+    # farmcalc.init(server='US',minimize_stage_key='san',lang='en',update=False)
     Data.stages=prep_stages()
     print_best()
 
