@@ -85,7 +85,5 @@ edit code:   ```ocrtag.py```:```pytesseract.pytesseract.tesseract_cmd = r'your p
 
 ### ADB
   add adb.exe to PATH https://developer.android.com/tools/releases/platform-tools
-#### to use wireless adb:
-  ```adb pair 192.168.0.39:15468 314692```
-  
+
 
