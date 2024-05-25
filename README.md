@@ -21,6 +21,7 @@ arknights side story to unlock
 | Dossoles Holiday                | DH-4[Ester]0                                                 ||
 | Break the Ice                   | BI-5[Diketon]0                                               ||
 | Stultifera Navis                | SN-5[Oriron Shard]0                                          ||
+
 ```python furniture.py``` by furniture
 | side story                               | furniture store                             | in store   | full   | amb   | cost   | amb/cost   |
 |------------------------------------------|---------------------------------------------|------------|--------|-------|--------|------------|
@@ -68,6 +69,7 @@ arknights side story to unlock
 | # Hortus de Escapismo                    | Ambulacrum Ambrosii                         |            |        |       |        |            |
 | # So Long, Adele: Home Away From Home    | Trip to the 'White Volcano'                 |            |        |       |        |            |
 | # Zwillingstürme im Herbst               | Ludwigs-Universität Lecture Hall            |            |        | 5000  |        |            |
+
 ### Install
 Install Python 3.12.2
 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
