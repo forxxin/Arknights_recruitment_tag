@@ -71,10 +71,15 @@ arknights side story to unlock
 | # Zwillingstürme im Herbst               | Ludwigs-Universität Lecture Hall            |            |        | 5000  |        |            |
 
 ### Install
-##### Install Python 3.12.2
-##### Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
-##### ```pip install -r pip_install_r_thisfile```
-##### edit code:   ```ocrtag.py```:```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
-##### add adb.exe to PATH https://developer.android.com/tools/releases/platform-tools
+Install Python 3.12.2
+
+Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
+
+```pip install -r pip_install_r_thisfile```
+
+edit code:   ```ocrtag.py```:```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
+
+add adb.exe to PATH https://developer.android.com/tools/releases/platform-tools
+
 
 
