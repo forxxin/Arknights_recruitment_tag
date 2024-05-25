@@ -1,16 +1,15 @@
-###  generate char.xlsx ```python char.py```
+### ```python char.py``` generate char.xlsx 
 ![screenshot](screenshot/charxlsx.png)
 ### ```python ui_qt.py```
 ![screenshot](screenshot/farm.png)
-#### Herbstmondeskonzert store priority
+#### store priority
 ![screenshot](screenshot/event_store_priority.png)
+#### recruit tag
 ![screenshot](screenshot/tag.png)
-
 ### ```python levelplot.py```
 ![screenshot](screenshot/levelplot.png)
-### arknights side story to unlock (2024-4-23)
-### by drop 
-```python stages.py```
+### arknights side story to unlock
+### ```python stages.py``` by drop 
 |                                   |                                                                ||
 |-----------------------------------|----------------------------------------------------------------|-|
 | Grani and the Knights' Treasure | GT-4[Sugar Substitute]rarity=0            | GT-5[Loxic Kohl->D32 Steel]4 |
