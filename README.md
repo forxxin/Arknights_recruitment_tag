@@ -1,11 +1,13 @@
+## ```python char.py```
+will generate char.xlsx
 
-## ```python ui_qt.pyw```
+## ```python ui_qt.py```
 ![screenshot](screenshot/farm.png)
 #### Herbstmondeskonzert store priority
 ![screenshot](screenshot/event_store_priority.png)
 ![screenshot](screenshot/tag.png)
 
-### ```python levelplot.pyw```
+### ```python levelplot.py```
 ![screenshot](screenshot/levelplot.png)
 ## arknights side story to unlock (2024-4-23)
 ### by drop 
@@ -78,7 +80,7 @@ Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
 
 ```pip install -r pip_install_r_thisfile```
 
-edit code:   ```anhrtags.pyw```:```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
+edit code:   ```ocrtag.py```:```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
 
 
 ### ADB
