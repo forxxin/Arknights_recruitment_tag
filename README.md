@@ -1,14 +1,19 @@
 ```python char.py``` generate char.xlsx 
 ![screenshot](screenshot/charxlsx.png)
+
 ```python ui_qt.py```
 ![screenshot](screenshot/farm.png)
+
 store priority
 ![screenshot](screenshot/event_store_priority.png)
+
 recruit tag
 ![screenshot](screenshot/tag.png)
+
 ```python levelplot.py```
 ![screenshot](screenshot/levelplot.png)
-arknights side story to unlock
+
+arknights side story to unlock:
 
 ```python stages.py``` by drop 
 |                                   |                                                                ||
