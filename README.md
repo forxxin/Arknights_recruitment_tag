@@ -1,7 +1,6 @@
-## ```python char.py```
-will generate char.xlsx
+###  generate char.xlsx ```python char.py```
 ![screenshot](screenshot/charxlsx.png)
-## ```python ui_qt.py```
+### ```python ui_qt.py```
 ![screenshot](screenshot/farm.png)
 #### Herbstmondeskonzert store priority
 ![screenshot](screenshot/event_store_priority.png)
@@ -9,7 +8,7 @@ will generate char.xlsx
 
 ### ```python levelplot.py```
 ![screenshot](screenshot/levelplot.png)
-## arknights side story to unlock (2024-4-23)
+### arknights side story to unlock (2024-4-23)
 ### by drop 
 ```python stages.py```
 |                                   |                                                                ||
