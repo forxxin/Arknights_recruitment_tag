@@ -1,15 +1,15 @@
-### ```python char.py``` generate char.xlsx 
+```python char.py``` generate char.xlsx 
 ![screenshot](screenshot/charxlsx.png)
-### ```python ui_qt.py```
+```python ui_qt.py```
 ![screenshot](screenshot/farm.png)
-#### store priority
+store priority
 ![screenshot](screenshot/event_store_priority.png)
-#### recruit tag
+recruit tag
 ![screenshot](screenshot/tag.png)
-### ```python levelplot.py```
+```python levelplot.py```
 ![screenshot](screenshot/levelplot.png)
-### arknights side story to unlock
-### ```python stages.py``` by drop 
+arknights side story to unlock
+```python stages.py``` by drop 
 |                                   |                                                                ||
 |-----------------------------------|----------------------------------------------------------------|-|
 | Grani and the Knights' Treasure | GT-4[Sugar Substitute]rarity=0            | GT-5[Loxic Kohl->D32 Steel]4 |
@@ -20,9 +20,7 @@
 | Dossoles Holiday                | DH-4[Ester]0                                                 ||
 | Break the Ice                   | BI-5[Diketon]0                                               ||
 | Stultifera Navis                | SN-5[Oriron Shard]0                                          ||
-
-### by furniture
-```python furniture.py```
+```python furniture.py``` by furniture
 | side story                               | furniture store                             | in store   | full   | amb   | cost   | amb/cost   |
 |------------------------------------------|---------------------------------------------|------------|--------|-------|--------|------------|
 | Mansfield Break(36)                      | Mansfield Prison Cell                       | 1          | 0      | 5000  | 1225   | 4.082      |
@@ -69,19 +67,11 @@
 | # Hortus de Escapismo                    | Ambulacrum Ambrosii                         |            |        |       |        |            |
 | # So Long, Adele: Home Away From Home    | Trip to the 'White Volcano'                 |            |        |       |        |            |
 | # Zwillingstürme im Herbst               | Ludwigs-Universität Lecture Hall            |            |        | 5000  |        |            |
-
-
-## Install
+### Install
 Install Python 3.12.2
-
 Install tesseract https://github.com/UB-Mannheim/tesseract/wiki
-
 ```pip install -r pip_install_r_thisfile```
-
 edit code:   ```ocrtag.py```:```pytesseract.pytesseract.tesseract_cmd = r'your path/tesseract.exe'```
-
-
-### ADB
-  add adb.exe to PATH https://developer.android.com/tools/releases/platform-tools
+add adb.exe to PATH https://developer.android.com/tools/releases/platform-tools
 
 
