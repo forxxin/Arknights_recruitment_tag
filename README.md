@@ -76,9 +76,9 @@ arknights side story to unlock:
 | # Zwillingstürme im Herbst                       | Ludwigs-Universität Lecture Hall            |            |        | 5000  |        |            |
 
 #### headhunt total cost
-# 10+18+40+70+120=258
-# 7+14+35+60+100=216
-# 100+180+400+700+1200=2580 ?
+##### 10+18+40+70+120=258
+##### 7+14+35+60+100=216
+##### 100+180+400+700+1200=2580 ?
 ![screenshot](screenshot/headhunt_cost.png)
 
 ### Install
