@@ -211,8 +211,11 @@ class UiTagsSelect(QtWidgets.QWidget):
                 tag_lower=tag.lower()
                 if text==tag_lower:
                     return set_tag([tag])
-                if re.match(f'^{text}',tag_lower):
-                    tags_m.append(tag)
+                try:
+                    if re.match(f'^{text}',tag_lower):
+                        tags_m.append(tag)
+                except:
+                    pass
                 if text in tag_lower:
                     tags_in.append(tag)
                 if all([t in tag_lower for t in text.split()]):

@@ -307,7 +307,7 @@ class UiFarmStage(QtWidgets.QWidget):
                     itemids.add(item_out.item.id)
         for itemId in itemids:
             item = data.items.get(itemId)
-            if resource.ItemImg.img(item.id):
+            if resource.Img.item(item.id):
                 imgitem = UiItemImg(item)
                 imgitems[item.id]=imgitem
         arrowcolor = self.getcolor()
@@ -376,42 +376,6 @@ class UiFarmStage(QtWidgets.QWidget):
                 # self.layout.addWidget(check,row,col)
                 # col+=1
 
-class UiItemImg1(QtWidgets.QGraphicsItem):
-    n=3
-    len=80
-    len1=66
-    wordlen=11
-    def __init__(self, item,parent=None):
-        super().__init__(parent)
-        self.x=0
-        self.y=0
-        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
-        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
-        self.item = item
-        self.beststages = [([stage.code for stage in stages],san) for stages,san in self.item.beststage]
-        self.strs = []
-        for idx,(stages,san) in enumerate(self.beststages):
-            s=f"""[{', '.join(stages)}] {round(san,1):g}"""
-            if s not in self.strs:
-                self.strs.append(s)
-        self.pixmaps = []
-        file,file1 = resource.ItemImg1.img(item.id)
-        self.pixmaps.append(QtGui.QPixmap(file).scaled(UiItemImg.len,UiItemImg.len,aspectRatioMode=QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=QtCore.Qt.TransformationMode.SmoothTransformation))
-        self.pixmaps.append(QtGui.QPixmap(file1).scaled(UiItemImg.len1,UiItemImg.len1,aspectRatioMode=QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=QtCore.Qt.TransformationMode.SmoothTransformation))
-    def paint(self, painter, option, widget):
-        pixmap,pixmap1 = self.pixmaps
-        x=int((UiItemImg.len-UiItemImg.len1)/2)
-        painter.drawPixmap(0,0,pixmap)
-        painter.drawPixmap(pixmap.rect().center()-pixmap1.rect().center(),pixmap1)
-        painter.drawText(0,UiItemImg.len+UiItemImg.wordlen,self.item.name)
-        for idx,s in enumerate(self.strs):
-            if idx>=int(UiItemImg.n):
-                if not self.isSelected():
-                    break
-            painter.drawText(0,UiItemImg.len+UiItemImg.wordlen*(2+idx),s)
-    def boundingRect(self):
-        return QtCore.QRectF(0,0,UiItemImg.len,UiItemImg.len)
-
 class UiItemImg(QtWidgets.QGraphicsObject):
     n=3
     len=80
@@ -431,7 +395,7 @@ class UiItemImg(QtWidgets.QGraphicsObject):
             s=f"""[{', '.join(stages)}] {round(san,1):g}"""
             if s not in self.strs:
                 self.strs.append(s)
-        file = resource.ItemImg.img(item.id)
+        file = resource.Img.item(item.id)
         self.pixmap = QtGui.QPixmap(file).scaled(UiItemImg.len,UiItemImg.len,aspectRatioMode=QtCore.Qt.AspectRatioMode.KeepAspectRatio,transformMode=QtCore.Qt.TransformationMode.SmoothTransformation)
     def paint(self, painter, option, widget):
         x=int((UiItemImg.len-UiItemImg.len1)/2)

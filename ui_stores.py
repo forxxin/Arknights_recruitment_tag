@@ -21,7 +21,7 @@ class UiStores(QtWidgets.QWidget):
         # self.data=stores.Store(server='US',minimize_stage_key='san',,update=False)
         vlayout = MyVBoxLayout()
         tabs = QtWidgets.QTabWidget()
-        self.san_icon=QtGui.QIcon(resource.ItemImg.img('AP_GAMEPLAY'))
+        self.san_icon=QtGui.QIcon(resource.Img.item('AP_GAMEPLAY'))
         for idx,(store_info,store_sorted) in enumerate(self.data.stores_sorted.items()):
             store_name,store_icon = store_info
             store_icon = QtGui.QIcon(store_icon)
@@ -47,7 +47,7 @@ class UiStores(QtWidgets.QWidget):
                 table_item.setData(QtCore.Qt.ItemDataRole.DisplayRole, getattr(store_item,key))
                 if key=='name':
                     if (itemId:=store_item.itemId):
-                        if (file:=resource.ItemImg.img(itemId)):
+                        if (file:=resource.Img.item(itemId)):
                             table_item.setIcon(QtGui.QIcon(file))
                 elif key=='token_cost':
                     table_item.setIcon(store_icon)

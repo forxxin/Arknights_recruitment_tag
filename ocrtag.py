@@ -241,7 +241,7 @@ def ocr_img(alltag,img,roi):
     12    Sparse text with OSD.
     13    Raw line. Treat the image as a single text line, bypassing hacks that are Tesseract-specific.
     '''           
-    tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS').replace('pps','DPS')
+    tag_ocrs = re.sub(r'[^\w-]', ' ', tag_ocrs).replace('OPS','DPS').replace('bps','DPS').replace('pps','DPS').replace('Aot','AoE')
     taglow_tag = {tag.lower():tag for tag in sorted(alltag, key=len, reverse=True)}
     tags=[]
     for tag_ocr in tag_ocrs.lower().split():

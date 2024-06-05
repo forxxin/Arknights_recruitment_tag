@@ -252,7 +252,7 @@ class Store():
                 continue
             store_name,store_icon_itemid=store_info_raw
             if not store_name: continue
-            store_icon=resource.ItemImg.img(store_icon_itemid)
+            store_icon=resource.Img.item(store_icon_itemid)
             store_info=store_name,store_icon
             store,store_sorted = self.gen_store(store_raw,store_info)
             stores[store_info] = store

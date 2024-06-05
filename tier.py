@@ -53,8 +53,10 @@ def char_tier_gamepress():
             if x.name=='td':
                 tier=x.text
             elif x.name=='div':
-                char=x.text
-                res[char]=tiers[tier]
+                charname=x.text
+                if charname=='Rosa (Poca)':
+                    charname='Rosa'
+                res[charname]=tiers[tier]
     return res #{name:int}
 
 def char_tier():
@@ -66,4 +68,18 @@ def char_tier():
 
 if __name__ == '__main__':
     res=char_tier_gamepress()
-    print(res)
+    # print(res)
+
+    import char
+    data=char.Chars(server='US',lang='en')
+    # for charname,tier in res.items():
+        # if charname not in data.chars:
+            # print(charname)
+    names=list(res.keys())
+    for charid,char in data.chars.items():
+        if char.name not in res:
+            print('no_tier',char.name)
+        else:
+            if char.name in names:
+                names.remove(char.name)
+    print('tier_unmatch',names)

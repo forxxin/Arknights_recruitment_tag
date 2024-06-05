@@ -34,7 +34,7 @@ class UiChars(QtWidgets.QWidget):
                 table_item.setData(QtCore.Qt.ItemDataRole.DisplayRole, getattr(char,key))
                 if key=='name':
                     if (characterId:=char.characterId):
-                        if (file:=resource.CharImg.avatar(characterId)):
+                        if (file:=resource.Img.avatar(characterId)):
                             table_item.setIcon(QtGui.QIcon(file))
                 elif key=='token_cost':
                     table_item.setIcon(store_icon)

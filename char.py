@@ -72,12 +72,24 @@ class Character:
     # displayTokenDict:dict
     evolveCost:list
     tier:int
+    dorm_skills:list
+    attributes:str
+    blockCnt:int
     def __repr__(self):
         s=f'Character({self.name})'
         return s
     def __str__(self):
         s=f'{self.name}'
         return s
+
+@dataclass
+class DormSkill:
+    charid:str
+    charname:str
+    elevel:tuple
+    roomType:str
+    icon:str
+    description:str
 
 @dataclass
 class CharacterExcel:
@@ -91,8 +103,15 @@ class CharacterExcel:
     evolveCost:str
     tags:str
     recruitable:int
+    blockCnt:int
+    # dorm_skill_0:str
+    # dorm_skill_1:str
     @classmethod
     def from_character(cls, char):
+        # dorm_skills=['','']
+        # for idx,skill in enumerate(char.dorm_skills):
+            # for (e,level),(roomType,icon,description) in skill.items():
+                # dorm_skills[idx]+=f'E{e}L{level} {roomType} {description}\n'
         return cls(
             characterId=char.characterId,
             name=char.name,
@@ -104,6 +123,9 @@ class CharacterExcel:
             evolveCost=str(char.evolveCost),
             tier=char.tier,
             recruitable=1 if char.recruitable else '',
+            blockCnt=char.blockCnt,
+            # dorm_skill_0=dorm_skills[0],
+            # dorm_skill_1=dorm_skills[1],
         )
 
 def subset(items,maxtag=5,self=0):
@@ -142,6 +164,11 @@ class CacheInstType(type):
             with self.lock:
                 self.instances[key]=instance
                 return instance
+
+
+def clean_html(s):
+    return re.sub(clean_html.cleaner, '', s)
+clean_html.cleaner = re.compile('<.*?>')
 
 class Chars(metaclass=CacheInstType):
     # url_agr = 'https://raw.githubusercontent.com/yuanyan3060/ArknightsGameResource/main/'
@@ -183,9 +210,11 @@ class Chars(metaclass=CacheInstType):
         self.prep_chars_excel()
     def prep_chars(self):
         self.chars={}
+        self.dskills=[]
         character_table = resource.GameData.json_table('character', lang=self.lang2)  # 'zh_CN'
         gacha_table = resource.GameData.json_table('gacha', lang=self.lang2)  # 'zh_CN'
         tagsid_name = {tag.get('tagId'):tag.get('tagName') for tag in gacha_table.get('gachaTags')}
+        building_data = resource.GameData.json_data('building', lang=self.lang2)  # 'zh_CN'
         tag_profession = set()
         tag_position = set()
         tag_tagList = set()
@@ -193,13 +222,14 @@ class Chars(metaclass=CacheInstType):
         def recruits():
             recruitDetail=gacha_table.get('recruitDetail')
             details=recruitDetail[recruitDetail.find('★'):].split('--------------------')
-            cleaner = re.compile('<.*?>')
+            # cleaner = re.compile('<.*?>')
             res={}
             for rarity,detail in enumerate(details, start=1):
                 detail=detail.strip().splitlines()
                 assert detail[0].startswith('★'*rarity)
                 assert len(detail)==2
-                detail = re.sub(cleaner, '', detail[1])
+                # detail = re.sub(cleaner, '', detail[1])
+                detail=clean_html(detail[1])
                 detail=detail.split('/')
                 detail=[("'Justice Knight'" if name.strip()=='Justice Knight' else name.strip()) for name in detail]
                 # print(rarity,detail)
@@ -221,8 +251,6 @@ class Chars(metaclass=CacheInstType):
             return frozenset(tags)
         def gen_rarity(char_data):
             return resource.rarity_int(char_data.get('rarity'))
-        def gen_img(name_url,char_id):
-            return resource.CharImg.img(char_id,name_url)
         def recruitable(rarity,name):
             return name in recruits[rarity]
         def recruitable1(char_id):
@@ -248,19 +276,56 @@ class Chars(metaclass=CacheInstType):
                 cost.append([(item.get('id'), item.get('count')) for item in (phase.get('evolveCost') or [])])
             assert cost[0]==[]
             return cost[1:]
-        def dorm_skill(char_id):
-            building_data = resource.GameData.json_data('building', lang=self.lang2)  # 'zh_CN'
+        def attributes(char_data):
+            blockCnt=None
+            for e,phase in enumerate(char_data.get('phases')):
+                for attributesKeyFrame in (phase.get('attributesKeyFrames') or []):
+                    level=attributesKeyFrame.get('level')
+                    attributes=attributesKeyFrame.get('data')
+                    blockCnt=attributes.get('blockCnt')
+            # print(blockCnt)
+            return blockCnt
+        def gen_blockCnt(char_data):
+            blockCnt=None
+            for e,phase in enumerate(char_data.get('phases')):
+                for attributesKeyFrame in (phase.get('attributesKeyFrames') or []):
+                    level=attributesKeyFrame.get('level')
+                    attributes=attributesKeyFrame.get('data')
+                    blockCnt=attributes.get('blockCnt')
+            return blockCnt
+        # dss=set()
+        def dorm_skill(char_id,name):
             buffs = building_data.get('buffs',{})
-            for buffChar in building_data.get('chars',{}).get(char_id,{}).get('buffChar',[]):
+            dorm_skills=[]
+            for idx,buffChar in enumerate(building_data.get('chars',{}).get(char_id,{}).get('buffChar',[])):
+                skill={}
                 for buffData in buffChar.get('buffData',[]):
                     buffId = buffData.get('buffId')
                     e = int(buffData.get('cond',{}).get('phase','0')[-1:]) # PHASE_0
                     level = int(buffData.get('cond',{}).get('level',1)) # 30
                     buff=buffs.get(buffId)
                     skillIcon=buff.get('skillIcon')
+                    icon=resource.Img.dorm_skill(skillIcon)
                     roomType=buff.get('roomType')
-                    description=buff.get('description')
+                    description=clean_html(buff.get('description'))
+                    skill[(e,level)]=(roomType,icon,description)
+                    ds=DormSkill(
+                        charid=char_id,
+                        charname=name,
+                        elevel=(e,level),
+                        roomType=roomType,
+                        icon=icon,
+                        description=description,
+                    )
+                    self.dskills.append(ds)
+                    # dss.add((e,level))
+                dorm_skills.append(skill)
+            # print(dorm_skills)
+            assert len(dorm_skills) in [2,0], char_id
+            return dorm_skills
         def gen_tier(name):
+            # if name not in tiers:
+                # print('notier',name)
             return tiers.get(name)
         for char_id,char_data in character_table.items():
             if (
@@ -279,20 +344,27 @@ class Chars(metaclass=CacheInstType):
                 position=char_data.get('position'),
                 tags=gen_tags(char_data,rarity,name),
                 rarity=rarity,
-                avatar=gen_img(resource.CharImg.name_avatar,char_id),
-                # avatar2=gen_img(resource.CharImg.name_avatar2,char_id),
-                # portrait=gen_img(resource.CharImg.name_portrait,char_id),
-                # portrait2=gen_img(resource.CharImg.name_portrait2,char_id),
+                avatar=resource.Img.avatar(char_id),
+                # avatar2=resource.Img.avatar2(char_id),
+                # portrait=resource.Img.portrait(char_id),
+                # portrait2=resource.Img.portrait2(char_id),
                 itemObtainApproach=char_data.get('itemObtainApproach') or '',
                 recruitable=recruitable(rarity,name),
                 evolveCost=evolve_cost(char_data),
                 tier=gen_tier(name),
+                dorm_skills=dorm_skill(char_id,name),
+                attributes=attributes(char_data),
+                blockCnt=gen_blockCnt(char_data),
             )
             # print(char.evolveCost)
             self.chars[char_id]=char
         self.chars = {k:v for k,v in sorted(self.chars.items(), key=lambda item:(-item[1].rarity,item[1].tier==None,item[1].tier,item[1].name))}
         self.all_tags = [tag_profession,tag_position,tag_tagList]
-        
+        # print(dss) #{(0, 1), (0, 30), (1, 1), (2, 1)}
+    def prep_subtier(self):
+        for char_id,char in self.chars.items():
+            char.rarity
+            char.tier
     def prep_tags_char(self):
         self.tags_result={}
         # self.tags_result5={}
@@ -337,8 +409,9 @@ class Chars(metaclass=CacheInstType):
         def sort(item):
             tags_,d=item
             rarity=d['rarity']
-            tier=d[rarity][0].tier
-            return -rarity,tier,
+            tiers = [char.tier for char in d[rarity] if isinstance(char.tier,int)]
+            return -rarity,tiers[0],tiers[-1]
+        # print(res)
         return {k:v for k,v in sorted(res.items(), key=sort)}
     def recruit(self,tags):
         res={}
@@ -370,42 +443,87 @@ class Chars(metaclass=CacheInstType):
         # return self.sort_result({tags_:self.tags_result6.get(tags_) for tags_ in subset(tags,self=1) if tags_ in self.tags_result6})
 
     def prep_chars_excel(self):
-        Chars.chars_excel={}
-        Chars.chars_excel = {characterId:CharacterExcel.from_character(char) for characterId,char in self.chars.items()}
+        self.chars_excel={}
+        self.chars_excel = {characterId:CharacterExcel.from_character(char) for characterId,char in self.chars.items()}
 
     def save_excel(self):
-        df = pd.DataFrame(Chars.chars_excel.values())
+        df = pd.DataFrame(self.chars_excel.values())
         df.to_excel('char.xlsx')
         print(df)
+        df1 = pd.DataFrame(self.dskills)
+        df1.to_excel('dormskills.xlsx')
 
+import datetime
+@dataclass
+class GACHAPool:
+    gachaPoolId:str
+    openTime:datetime.datetime
+    endTime:datetime.datetime
+    strtime:str
+    char_t5:list
+    char_t6:list
+    strchar:str
+    def __str__(self):
+        return f'{self.gachaPoolId}: {self.strtime}\n{self.strchar}'
 if __name__ == "__main__":
     data=Chars(server='US',lang='en')
     data.save_excel()
     
     # tags = ['减速','控场','费用回复','特种','远程位',]
-    tags = ['Vanguard', 'Crowd-Control', 'DP-Recovery', 'Debuff', 'Healing']
-    res = data.recruit(tags)
-    pprint.pprint(res)
-        
+    # tags = ['Vanguard', 'Crowd-Control', 'DP-Recovery', 'Debuff', 'Healing']
+    # res = data.recruit(tags)
+    # pprint.pprint(res)
+    now=datetime.datetime.now()
     gacha_table = resource.GameData.json_table('gacha', lang='en_US')  # 'zh_CN'
+    gs=[]
+    gs1=[]
     for gachaPool in gacha_table.get('gachaPoolClient'):
-        gachaPoolSummary = gachaPool.get('gachaPoolSummary')
-        if gachaPoolSummary=='Ends June 4 03:59':
-            rarityPickCharDict = gachaPool.get('dynMeta').get('rarityPickCharDict',{})
-            if rarityPickCharDict:
-                char_t5=[]
-                char_t6=[]
-                for charid in rarityPickCharDict.get('TIER_5'):
-                    char=data.chars.get(charid)
-                    char_t5.append(char)
-                for charid in rarityPickCharDict.get('TIER_6'):
-                    char=data.chars.get(charid)
-                    char_t6.append(char)
-                print(gachaPoolSummary)
-                print('\tTIER_5')
+        openTime=datetime.datetime.fromtimestamp(gachaPool.get('openTime'))
+        endTime=datetime.datetime.fromtimestamp(gachaPool.get('endTime'))
+        if (isopen:=openTime<now<endTime) or (now<openTime):
+            gachaPoolId=gachaPool.get('gachaPoolId')
+            strtime=f'{openTime.strftime(r"%Y-%m %d_%H:%M")}~{endTime.strftime(r"%d_%H:%M")}'
+            char_t5=[]
+            char_t6=[]
+            strchar=''
+            if (dynMeta:=gachaPool.get('dynMeta')):
+                if (main6RarityCharId:=dynMeta.get('main6RarityCharId')):
+                    char_t6.append(data.chars.get(main6RarityCharId))
+                if (sub6RarityCharId:=dynMeta.get('sub6RarityCharId')):
+                    char_t6.append(data.chars.get(sub6RarityCharId))
+                if (rare5CharList:=dynMeta.get('rare5CharList')):
+                    char_t5+=[data.chars.get(charid) for charid in rare5CharList]
+                # chooseRuleConst = dynMeta.get('chooseRuleConst')
+                # homeDescConst = dynMeta.get('homeDescConst')
+                # star5ChooseRuleConst = dynMeta.get('star5ChooseRuleConst')
+                # star6ChooseRuleConst = dynMeta.get('star6ChooseRuleConst')
+                # gachaPoolSummary = gachaPool.get('gachaPoolSummary') #'Ends June 4 03:59'
+                if (rarityPickCharDict := dynMeta.get('rarityPickCharDict') or {}):
+                    char_t5+=[data.chars.get(charid) for charid in rarityPickCharDict.get('TIER_5') or []]
+                    char_t6+=[data.chars.get(charid) for charid in rarityPickCharDict.get('TIER_6') or []]
+                strchar+='\tR5:\n'
                 for char in sorted(char_t5,key=lambda char:(char.tier==None,char.tier)):
-                    print('\t\t',char.name,char.tier)
-                print('\tTIER_6')
+                    strchar+=f'\t\t{char.name}.T{char.tier}\n'
+                strchar+='\tR6:\n'
                 for char in sorted(char_t6,key=lambda char:(char.tier==None,char.tier)):
-                    print('\t\t',char.name,char.tier)
-                
+                    strchar+=f'\t\t{char.name}.T{char.tier}\n'
+            g=GACHAPool(
+                gachaPoolId=gachaPoolId,
+                openTime=openTime,
+                endTime=endTime,
+                strtime=strtime,
+                char_t5=char_t5,
+                char_t6=char_t6,
+                strchar=strchar,
+            )
+            if isopen:
+                gs.append(g)
+            else:
+                gs1.append(g)
+            # if gachaPoolSummary=='Ends June 4 03:59':
+                # break
+    for g in gs:
+        print(g)
+    print('-'*44)
+    for g in gs1:
+        print(g)
