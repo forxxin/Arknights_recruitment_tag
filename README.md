@@ -93,5 +93,5 @@ edit code:   ```ocrtag.py```:```pytesseract.pytesseract.tesseract_cmd = r'your p
 add adb.exe to PATH https://developer.android.com/tools/releases/platform-tools
 
 ###
-remove tmp folder to download newest data. 
-data source: ```resource.py```'s https://...
+##### remove tmp folder to download newest data. 
+##### data source: ```resource.py```'s https://...
