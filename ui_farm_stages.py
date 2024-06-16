@@ -347,6 +347,7 @@ class UiFarmStage(QtWidgets.QWidget):
         self.close_worker()
         for view in self.views.values():
             view.close()
+        event.accept()
 
 # class UiStageSelect(QtWidgets.QDialog):
     # def __init__(self,parent=None):
@@ -492,6 +493,7 @@ class UiGraphicsView(QtWidgets.QGraphicsView):
                     img.y=y
     def closeEvent(self,event):
         self.save_pos()
+        event.accept()
 
 class UiFormulaArrow(QtWidgets.QGraphicsObject): # QGraphicsObject Inherits: QObject QGraphicsItem
     def __init__(self, startItem, endItem,color,n,parent=None):

@@ -65,6 +65,7 @@ class UiRoot(QtWidgets.QMainWindow):
         self.ui_stores.close()
         for ui_recr in self.ui_recrs.values():
             ui_recr.close()
+        event.accept()
     def save_pos(self):
         g=self.geometry()
         d={'geometry':[g.x(),g.y(),g.width(),g.height()],'currentIndex':self.tabs.currentIndex()}
@@ -189,6 +190,7 @@ class UiArgs(QtWidgets.QWidget):
         # UiItemImg.n=self.combs['show'].currentText()
     def closeEvent(self,event):
         self.save_pos()
+        event.accept()
 
 def main():
     app = QtWidgets.QApplication([])

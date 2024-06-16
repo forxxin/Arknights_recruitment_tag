@@ -79,6 +79,7 @@ class UiPlan(QtWidgets.QWidget):
         
     def closeEvent(self,event):
         self.save_pos()
+        event.accept()
     def save_pos(self):
         g=self.geometry()
         d={'geometry':[g.x(),g.y(),g.width(),g.height()],'currentIndex':self.tabs.currentIndex()}

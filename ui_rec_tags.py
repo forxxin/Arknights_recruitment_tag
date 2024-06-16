@@ -30,6 +30,7 @@ class UiQrCode(QtWidgets.QDialog):
         vlayout.addWidget(label)
     def closeEvent(self,event):
         self.pair.stop_pair()
+        event.accept()
 
 class UiTag(QtWidgets.QLabel):
     def __init__(self,data,tag,parent=None):
@@ -352,7 +353,7 @@ class UiRecTag(QtWidgets.QMainWindow):
             self.worker_thread.wait()
     def closeEvent(self,event):
         self.close_worker()
-
+        event.accept()
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     root = UiRecTag({'server':'US','lang':'en'})
