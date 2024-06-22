@@ -410,7 +410,8 @@ class Chars(metaclass=CacheInstType):
             tags_,d=item
             rarity=d['rarity']
             tiers = [char.tier for char in d[rarity] if isinstance(char.tier,int)]
-            return -rarity,tiers[0],tiers[-1]
+            hastier=len(tiers)>0
+            return -rarity,hastier and tiers[0],hastier and tiers[-1]
         # print(res)
         return {k:v for k,v in sorted(res.items(), key=sort)}
     def recruit(self,tags):

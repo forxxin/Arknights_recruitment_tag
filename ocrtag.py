@@ -36,7 +36,7 @@ except:
 app_path = os.path.dirname(__file__)
 os.chdir(app_path)
 pytesseract.pytesseract.tesseract_cmd = os.path.abspath(r'../../Tesseract-OCR/tesseract.exe')
-SAVE_ROIIMG=True
+SAVE_ROIIMG=False
 
 def windows_image(img_anhrtags,app_title='Arknights',border=False,scaled=True):
     try:
